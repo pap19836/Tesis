@@ -17,14 +17,5 @@ def exchangeJSON(data): # value must be sent as ascii string
         except Exception as e:
             print (e)
             pass
-        prototype_settings.ser.close()
-def recieveJSON():
-    if prototype_settings.ser.isOpen():
-        try:
-            incoming = prototype_settings.ser.readline().decode('ascii')
-            return (incoming)
-        except Exception as e:
-            print (e)
-            pass
-        prototype_settings.ser.close()
-        
+#         prototype_settings.ser.close()
+

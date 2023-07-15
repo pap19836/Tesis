@@ -31,8 +31,6 @@ class ServoControl(object):
         self.poll()
         
     def poll(self):
-#         if(prototype_settings.ser.is_open != 1):
-#             prototype_settings.ser.open()
         data = {}
         data['servo1'] = str(w1.get())
         data['servo2'] = str(w2.get())
@@ -41,25 +39,5 @@ class ServoControl(object):
         self.root.after(100, self.poll)
 
 
-
-
-
-# exchangeJSON(data) #data must be sent as dictionary/key
-# root = tk.Tk()
-# global w1, w2
-# w1 = tk.Scale(root, from_=0, to=180)
-# w1.pack()
-# w2 = tk.Scale(root, from_=0, to=180)
-# w2.pack()
-# while(1):
-#     if(prototype_settings.ser.is_open != 1):
-#         prototype_settings.ser.open()
-#     root.update()
-#     data = {}
-#     data['servo1'] = str(w1.get())
-#     data['servo2'] = str(w2.get())
-#     print(data)
-#     exchangeJSON(data)
-#     time.sleep(100)
 servos = ServoControl()
 servos.root.mainloop()

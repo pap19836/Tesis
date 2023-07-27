@@ -1,0 +1,13 @@
+{
+    "configuration": "default",
+    "documentId": "013b1c485ee04afc7b99ac21",
+    "documentMicroversion": "cfbc8521b2e27d41cde33a4d",
+    "elementId": "bab0f5909b51cb98bc32853b",
+    "fullConfiguration": "default",
+    "id": "MgPVpvGszgydU6E1S",
+    "isStandardContent": false,
+    "name": "Motor_Eje2 <1>",
+    "partId": "JOD",
+    "suppressed": false,
+    "type": "Part"
+}

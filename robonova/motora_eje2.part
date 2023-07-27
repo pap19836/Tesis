@@ -1,0 +1,13 @@
+{
+    "configuration": "default",
+    "documentId": "013b1c485ee04afc7b99ac21",
+    "documentMicroversion": "cfbc8521b2e27d41cde33a4d",
+    "elementId": "ca8b6bd5248f72e3de556acc",
+    "fullConfiguration": "default",
+    "id": "MfnKywTKlgB3W2ZWX",
+    "isStandardContent": false,
+    "name": "MotorA_Eje2 <1>",
+    "partId": "JQD",
+    "suppressed": false,
+    "type": "Part"
+}

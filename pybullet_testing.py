@@ -14,7 +14,8 @@ pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
 plane = pybullet.loadURDF("plane.urdf")
 
 #robot = pybullet.loadURDF("xpp/robots/xpp_hyq/urdf/biped.urdf")
-robot = pybullet.loadURDF("kuka_experimental/kuka_kr120_support/urdf/kr120r2500pro.urdf",[0,0,3],useFixedBase=1)
+#robot = pybullet.loadURDF("kuka_experimental/kuka_kr120_support/urdf/kr120r2500pro.urdf",[0,0,3],useFixedBase=1)
+robot = pybullet.loadURDF("robonova/robot.urdf",[0,0,0.2],useFixedBase=1)
 position, orientation = pybullet.getBasePositionAndOrientation(robot)
 numJoints = pybullet.getNumJoints(robot)
 

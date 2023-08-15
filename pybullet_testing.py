@@ -31,7 +31,7 @@ joint_number = list(range(numJoints))
 pybullet.setGravity(0,0,-9.81)
 pybullet.setTimeStep(0.0001)
 pybullet.setRealTimeSimulation(1)
-
+old_slider_values = 0
 # Run Simulation
 while True:
     pybullet.stepSimulation()
@@ -40,3 +40,7 @@ while True:
         x = pybullet.readUserDebugParameter(i)
         slider_values.append(x)
     pybullet.setJointMotorControlArray(robot,joint_number,pybullet.POSITION_CONTROL, slider_values)
+    if slider_values != old_slider_values:
+        old_slider_values = slider_values
+        print('split'+str(slider_values))
+    

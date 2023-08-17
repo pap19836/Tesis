@@ -1,17 +1,17 @@
 import socket
-s = socket.socket
-ip = '0.0.0.0'
+from time import sleep
+from Prototipo.prototype_functions import exchangeJSON
+s = socket.socket()
+ip = '192.168.215.32'
 port = 8091
-s.bind((ip,port))
-s.listen(0)
+s.connect((ip,port))
 
+data = {}
+data['servo1'] = 50
+data['servo2'] = 10
 while True:
-    client, addr = s.accept()
-    while True:
-        content = client.recv(32)
-        if len(content)==0:
-            break
-        else:
-            print(content)
-        print("closing connection")
-        client.close()
+    s.sendall(b"Hello world\n")
+    s.sendall(b"Puto el que lea\n")
+    #data = s.recv(1024)
+    #print(f"Received {data!r}")
+    sleep(3)

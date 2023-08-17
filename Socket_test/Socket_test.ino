@@ -2,10 +2,10 @@
  
 const char* ssid = "HONOR Magic5 Lite 5G";
 const char* password =  "2eqfy93cq4awwvp";
- 
+
+WiFiServer wifiServer(8091);
+
 const uint16_t port = 8091;
-const char * host = "192.168.215.57";
- 
 void setup()
 {
  
@@ -16,30 +16,32 @@ void setup()
     delay(500);
     Serial.println("...");
   }
- 
+
+  wifiServer.begin();
+  
   Serial.print("WiFi connected with IP: ");
   Serial.println(WiFi.localIP());
  
 }
+
+void loop() {
  
-void loop()
-{
-    WiFiClient client;
+  WiFiClient client = wifiServer.available();
  
-    if (!client.connect(host, port)) {
+  if (client) {
  
-        Serial.println("Connection to host failed");
+    while (client.connected()) {
  
-        delay(1000);
-        return;
+      while (client.available()>0) {
+        char c = client.read();
+        Serial.write(c);
+      }
+ 
+      delay(10);
     }
  
-    Serial.println("Connected to server successful!");
- 
-    client.print("Hello from ESP32!");
- 
-    Serial.println("Disconnecting...");
     client.stop();
+    Serial.println("Client disconnected");
  
-    delay(10000);
+  }
 }

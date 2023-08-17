@@ -43,7 +43,7 @@ class MainWindow(QMainWindow):
             self.p.readyReadStandardError.connect(self.handle_stderr)
             self.p.stateChanged.connect(self.handle_state)
             self.p.finished.connect(self.process_finished)  # Clean up once complete.
-            self.p.start("python3", ['pybullet_testing.py'])
+            self.p.start("python3", ['pybullet_simulation.py'])
 
     def handle_stderr(self):
         data = self.p.readAllStandardError()
@@ -59,8 +59,6 @@ class MainWindow(QMainWindow):
             stdout2_list= list(stdout2.strip('][').split(", "))
             global servoValues
             servoValues = [eval(i) for i in stdout2_list]
-        #self.message(str(servoValues))
-        #self.message(stdout2)
 
     def handle_state(self, state):
         states = {
@@ -78,7 +76,7 @@ class MainWindow(QMainWindow):
     def saveData(self):
         global data
         data.append(servoValues)
-        self.message(str(data))
+        self.message(str(servoValues))
 
 
 

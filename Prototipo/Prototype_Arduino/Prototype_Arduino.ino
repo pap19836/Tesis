@@ -35,8 +35,8 @@ void loop() {
 void exchangeJSON(){
   String  payload;
   while ( !Serial.available()  ){}
-  if ( Serial.available() )
-    payload = Serial.readStringUntil( '\n' );
+    if ( Serial.available() )
+      payload = Serial.readStringUntil( '\n' );
 
   DeserializationError   error = deserializeJson(doc, payload);
   if (error) {

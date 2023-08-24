@@ -54,10 +54,11 @@ void loop() {
         values += c;
       }
       if(values != NULL){
-        Serial.println(values);
+        //Serial.println(values);
         exchangeJSON(values);  
-        servo1.write(int(doc["servo1"]));
-        servo2.write(int(doc["servo2"]));
+        Serial.println(int(doc["LeftShoulder1"]));
+        servo1.write(int(doc["LeftShoulder1"]));
+        servo2.write(int(doc["LeftShoulder2"]));
       }
       //pos1 = int(doc["servo1"]);
       //servo1.write(pos1);
@@ -79,7 +80,7 @@ void exchangeJSON(String payload){
     return;
   }
   
-  if (doc["servo1"] == "50") {
+  if (doc["LeftShoulder1"] == "50") {
      Serial.println("{\"Success\":\"True\"}");
      digitalWrite(21,HIGH);
   }

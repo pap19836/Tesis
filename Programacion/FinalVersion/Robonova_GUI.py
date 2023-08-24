@@ -40,15 +40,15 @@ class MainWindow(QMainWindow):
             self.message("Executing process")
             self.p = QProcess()  # Keep a reference to the QProcess (e.g. on self) while it's running.
             self.p.readyReadStandardOutput.connect(self.handle_stdout)
-            self.p.readyReadStandardError.connect(self.handle_stderr)
+#            self.p.readyReadStandardError.connect(self.handle_stderr)
             self.p.stateChanged.connect(self.handle_state)
             self.p.finished.connect(self.process_finished)  # Clean up once complete.
             self.p.start("python3", ['pybullet_simulation.py'])
 
-    def handle_stderr(self):
-        data = self.p.readAllStandardError()
-        stderr = bytes(data).decode("utf8")
-        self.message(stderr)
+#    def handle_stderr(self):
+#        data = self.p.readAllStandardError()
+#        stderr = bytes(data).decode("utf8")
+#        self.message(stderr)
 
     def handle_stdout(self):
         data = self.p.readAllStandardOutput()

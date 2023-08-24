@@ -12,7 +12,6 @@ plane = pybullet.loadURDF("plane.urdf")
 
 
 # Load robot URDF
-#robot = pybullet.loadURDF("kuka_experimental/kuka_kr120_support/urdf/kr120r2500pro.urdf",[0,0,3],useFixedBase=1)
 robot = pybullet.loadURDF("robonova/robot.urdf",[0,0,0.3],useFixedBase=1)
 
 # Get Robot info and set sliders

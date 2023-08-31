@@ -1,7 +1,7 @@
 #!C:\Users\stefa\OneDrive - Universidad del Valle de Guatemala\UVG\Tesis\Programacion\tesis_env\Scripts\python.exe"
 import pybullet
 import pybullet_data
-from numpy import rad2deg
+from numpy import rad2deg, deg2rad
 # IP Socket Config
 import socket
 import json
@@ -31,11 +31,10 @@ def pb():
     # Get Robot info and Initialize servos
     numJoints = pybullet.getNumJoints(robot)
     joints_info = []
-    servoValues = []
+    
     for i in range(numJoints):
         x = pybullet.getJointInfo(robot,i)
         joints_info.append(x)
-        servoValues.append(0)
     joint_number = list(range(numJoints))
     joint_dict = {}
     for i in joint_number:

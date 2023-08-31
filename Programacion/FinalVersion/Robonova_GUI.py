@@ -10,13 +10,14 @@ import GUI_Functions
 import time
 from math import ceil
 from numpy import deg2rad
-global servoValues
+
+pybullet_simulation.servoValues = deg2rad([0,0,-45,0,0,-60,0,0,0,0,45,0,0,-60,0,0])
 t1 = threading.Thread(target=pybullet_simulation.pb,args=())
 t1.start()
 time.sleep(2)
 
 
-servoValues = None
+
 global data
 data = []
 

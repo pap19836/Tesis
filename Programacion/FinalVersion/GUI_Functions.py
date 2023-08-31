@@ -4,11 +4,11 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton,
                              QVBoxLayout, QHBoxLayout, QGridLayout)
 from PyQt5.QtCore import (Qt)
 from numpy import rad2deg, ceil
-def addDial(self, name, lower_limit, upper_limit):
+def addDial(self, name, lower_limit, upper_limit, initial_value):
     # Dial Widget
     self.dial = QDial()
     self.dial.setRange(lower_limit, upper_limit)
-
+    self.dial.setValue(initial_value)
     # Limits layout/widget
     self.LowerLimitLabel = QLabel(str(lower_limit))
     self.UpperLimitLabel = QLabel(str(upper_limit))
@@ -46,11 +46,12 @@ def addDial(self, name, lower_limit, upper_limit):
     return dial_layout
 
 def creatDials(self, info:list):
+    from pybullet_simulation import servoValues
     dial_list = []
     for i in range(len(info)):
         dial = addDial(self,str(info[i][1],"utf-8"),
                        round(rad2deg(info[i][8])),
-                       round(rad2deg(info[i][9])))
+                       round(rad2deg(info[i][9])),int(rad2deg(servoValues[i])))
         dial_list.append(dial)
     return dial_list
 

@@ -26,7 +26,7 @@ def pb():
 
 
     # Load robot URDF
-    robot = pybullet.loadURDF("Programacion/FinalVersion/robonova/robot.urdf",[0,0,0.35],useFixedBase=1)
+    robot = pybullet.loadURDF("robonova/robot.urdf",[0,0,0.35],useFixedBase=1)
 
     # Get Robot info and Initialize servos
     numJoints = pybullet.getNumJoints(robot)

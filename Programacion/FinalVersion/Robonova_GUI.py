@@ -60,18 +60,19 @@ class MainWindow(QMainWindow):
         self.dials[15].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(15))
 
         dialsLayout = GUI_Functions.dialsLayout(self.dials)
-        l = QVBoxLayout()
-        l.addWidget(self.GetDataBtn)
-        l.addWidget(self.SendDataBtn)
-        l.addWidget(self.connectCB)
-        l.addLayout(dialsLayout)
-        l.addWidget(self.text)
+        layout1 = QHBoxLayout()
+        layout1.addWidget(self.GetDataBtn)
+        layout1.addWidget(self.SendDataBtn)
+        mainLayout = QVBoxLayout()
+        mainLayout.addLayout(layout1)
+        mainLayout.addWidget(self.connectCB)
+        mainLayout.addLayout(dialsLayout)
+        mainLayout.addWidget(self.text)
         w = QWidget()
-        w.setLayout(l)
+        w.setLayout(mainLayout)
 
         self.setCentralWidget(w)
     def updateDial(self,a):
-
         dialValue =self.dials[a].itemAt(0).widget().value()
         valueLable =self.dials[a].itemAt(1).itemAt(1).widget()
         valueLable.setText(str(dialValue))
@@ -80,12 +81,12 @@ class MainWindow(QMainWindow):
         self.text.appendPlainText(s)
 
     def getData(self):
-        a = pybullet_simulation.slider_values
-        data.append(servoValues)
-        self.message(str(a))
+        b = [n for n in pybullet_simulation.servoValues]
+        data.append(b)
+        self.message(str(data))
     
     def sendData(self):
-        pybullet_simulation.a = 10
+        pybullet_simulation.servoValues = data[0]
     def connectRobonva(self):
         pybullet_simulation.activeConnection = self.connectCB.isChecked()
 

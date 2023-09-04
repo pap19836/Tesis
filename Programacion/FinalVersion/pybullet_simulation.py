@@ -19,14 +19,15 @@ def pb():
     # Connect to simulation
     pybullet.connect(pybullet.GUI)
     pybullet.resetSimulation()
-
+    pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI,0)
+    pybullet.resetDebugVisualizerCamera( cameraDistance=0.8, cameraYaw=45, cameraPitch=-30, cameraTargetPosition=[0,0,0.25])
     # Set plane in simulation
     pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
     plane = pybullet.loadURDF("plane.urdf")
 
 
     # Load robot URDF
-    robot = pybullet.loadURDF("robonova/robot.urdf",[0,0,0.35],useFixedBase=1)
+    robot = pybullet.loadURDF("robonova/robot.urdf",[0,0,0.32],useFixedBase=1)
 
     # Get Robot info and Initialize servos
     numJoints = pybullet.getNumJoints(robot)
@@ -43,13 +44,15 @@ def pb():
     pybullet.setGravity(0,0,-9.81)
     pybullet.setTimeStep(0.0001)
     pybullet.setRealTimeSimulation(1)
+    maxForce = [0.0 for n in servoValues]
     #global old_servo_values
     old_servo_values = [1000]
     connected = False
     # Run Simulation
+    pybullet.setJointMotorControlArray(robot,joint_number,pybullet.POSITION_CONTROL, servoValues, maxForce)
     while True:
         pybullet.stepSimulation()
-        pybullet.setJointMotorControlArray(robot,joint_number,pybullet.POSITION_CONTROL, servoValues)
+        pybullet.setJointMotorControlArray(robot,joint_number,pybullet.POSITION_CONTROL, servoValues, maxForce)
         servo2 = []
 
         if activeConnection == True and connected == False:

@@ -3,8 +3,9 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton,
                              QWidget,
                              QVBoxLayout, QHBoxLayout, QGridLayout)
 from PyQt5.QtCore import (Qt)
-from numpy import rad2deg, ceil
-def addDial(self, name, lower_limit, upper_limit, initial_value):
+from numpy import rad2deg, ceil, deg2rad
+
+def addDial(self, name, lower_limit, upper_limit, initial_value, num):
     # Dial Widget
     self.dial = QDial()
     self.dial.setRange(lower_limit, upper_limit)
@@ -15,7 +16,7 @@ def addDial(self, name, lower_limit, upper_limit, initial_value):
     self.ValueLabel = QLabel(str(self.dial.value()))
 
     labelFont = self.LowerLimitLabel.font()
-    labelFont.setPointSize(10)
+    labelFont.setPointSize(12)
     self.LowerLimitLabel.setFont(labelFont)
     self.UpperLimitLabel.setFont(labelFont)
     self.ValueLabel.setFont(labelFont)
@@ -34,14 +35,11 @@ def addDial(self, name, lower_limit, upper_limit, initial_value):
     self.dial_name.setFont(nameFont)
     self.dial_name.setAlignment(Qt.AlignHCenter)
     
-    # Layout
+    # Main Layout
     dial_layout = QVBoxLayout()
     dial_layout.addWidget(self.dial)
     dial_layout.addLayout(LabelsLayout)
     dial_layout.addWidget(self.dial_name)
-
-    def updateDialValue(self):
-        print("a")
 
     return dial_layout
 
@@ -51,7 +49,8 @@ def creatDials(self, info:list):
     for i in range(len(info)):
         dial = addDial(self,str(info[i][1],"utf-8"),
                        round(rad2deg(info[i][8])),
-                       round(rad2deg(info[i][9])),int(rad2deg(servoValues[i])))
+                       round(rad2deg(info[i][9])),int(rad2deg(servoValues[i])),
+                       i)
         dial_list.append(dial)
     return dial_list
 
@@ -67,3 +66,5 @@ def dialsLayout(LayoutList):
             else:
                 layout.addLayout(LayoutList[i+columns],j,i)
     return layout
+
+

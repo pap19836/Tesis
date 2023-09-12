@@ -164,8 +164,7 @@ class MainWindow(QMainWindow):
             global currentCoreo
             currentCoreo = os.path.basename(self.filename[0])
             global currentCoreoLabel
-            currentCoreoLabel.setText("Current Coreography" + currentCoreo)
-            open(currentCoreo,"w")
+            currentCoreoLabel.setText("Current Coreography: " + currentCoreo)
         else:
             pass
 
@@ -175,8 +174,6 @@ class MainWindow(QMainWindow):
         if self.filename[0] != "":
             global currentCoreo
             currentCoreo = os.path.basename(self.filename[0])
-            self.f = open(currentCoreo,"r+")
-            lines = self.f.readlines()
             global currentCoreoLabel
             currentCoreoLabel.setText("Current Coreography: " + currentCoreo)
         else:
@@ -194,15 +191,37 @@ class MainWindow(QMainWindow):
             csvfile = open(currentCoreo, "w+")
             csvfile.truncate(0)
             csvfile.writelines(lines)
-            
         self.message("Position removed from coreograhy!")
         
     def clearCoreo(self):
+        with open(currentCoreo,"r+") as csvfile:
+            lines = ""
+            csvfile = open(currentCoreo, "w+")
+            csvfile.truncate(0)
+            csvfile.writelines(lines)
         self.message("Coreography cleared!")
     def deleteCoreo(self):
-        self.message("Coreography has been deleted!")
+        if os.path.exists(currentCoreo):
+            os.remove(currentCoreo)
+            self.message("Coreography has been deleted!")
+            currentCoreoLabel.setText("Current Coreography: ")
+        else:
+            self.message("No coreography selected")
     def playCoreo(self):
         self.message("Playing coreography...")
+        with open(currentCoreo, "r+") as csvfile:
+            reader = csv.reader(csvfile)
+            rows = []
+            for line in reader:
+                if not line:
+                    continue
+                rows.append(line)
+            for i in range(len(rows)):
+                coreoPosition = [float(x) for x in rows[i] ]
+                pybullet_simulation.servoValues = coreoPosition
+                time.sleep(0.1)
+        self.message("Coreography done!")
+            
     # MISC FUNCTIONS
     def message(self, s):
         self.text.appendPlainText(s)

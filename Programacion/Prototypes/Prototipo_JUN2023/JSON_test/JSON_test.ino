@@ -14,7 +14,7 @@ void loop() {
     payload = Serial.readStringUntil( '\n' );
   StaticJsonDocument<512> doc;
 
-  DeserializationError   error = deserializeJson(doc, payload);
+  DeserializationError   error = deserializeJson( , payload);
   if (error) {
     Serial.println(error.c_str()); 
     return;

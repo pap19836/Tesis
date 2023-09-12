@@ -1,16 +1,18 @@
 #!C:\Users\stefa\OneDrive - Universidad del Valle de Guatemala\UVG\Tesis\Programacion\tesis_env\Scripts\python.exe"
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton,
                              QPlainTextEdit, QCheckBox, QDial, QLabel,
-                             QWidget,
+                             QWidget, QInputDialog, QFileDialog,
                              QVBoxLayout, QHBoxLayout, QGridLayout)
 import sys
+import csv
 import threading
 import pybullet_simulation
 import GUI_Functions
 import time
 from math import ceil
 from numpy import deg2rad
-
+import os as os
+import pandas as pd
 pybullet_simulation.servoValues = deg2rad([0,0,-45,0,0,-60,0,0,0,0,45,0,0,-60,0,0])
 t1 = threading.Thread(target=pybullet_simulation.pb,args=())
 t1.start()
@@ -18,13 +20,9 @@ time.sleep(2)
 
 
 
-global data
-data = []
+global currentCoreo
+currentCoreo = ""
 
-global sliderValues
-sliderValues = []
-for i in range(len(pybullet_simulation.joints_info)):
-    sliderValues.append(0)
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -84,6 +82,8 @@ class MainWindow(QMainWindow):
         self.clearCoreoBtn = QPushButton("Clear coreography")
         self.deleteCoreoBtn = QPushButton("Delete Coreography File")
         self.playCoreoBtn = QPushButton("Play coreography")
+        global currentCoreoLabel
+        currentCoreoLabel = QLabel("Current Coreography: "+ currentCoreo)
         # Customize
         self.newCoreoBtn.setFont(btnFont)
         self.loadCoreoBtn.setFont(btnFont)
@@ -96,10 +96,6 @@ class MainWindow(QMainWindow):
         self.newCoreoBtn.pressed.connect(self.newCoreo)
         self.loadCoreoBtn.pressed.connect(self.loadCoreo)
         self.addCoreoBtn.pressed.connect(self.addCoreo)
-        self.addCoreoBtn.setStyleSheet("addCoreoBtn"
-                                   "{"
-                                   "spacing : 20px;"
-                                   "}")
         self.removeCoreoBtn.pressed.connect(self.removeCoreo)
         self.clearCoreoBtn.pressed.connect(self.clearCoreo)
         self.deleteCoreoBtn.pressed.connect(self.deleteCoreo)
@@ -113,15 +109,18 @@ class MainWindow(QMainWindow):
         coreoLayout1.addWidget(self.clearCoreoBtn, 2, 0)
         coreoLayout1.addWidget(self.deleteCoreoBtn, 2, 1)
         coreoLayout1.setSpacing(15)
+        coreoLabelsLayout = QHBoxLayout()
+        coreoLabelsLayout.addWidget(currentCoreoLabel)
         mainCoreoLayout = QVBoxLayout()
         mainCoreoLayout.addLayout(coreoLayout1)
         mainCoreoLayout.addWidget(self.playCoreoBtn)
+        mainCoreoLayout.addWidget(currentCoreoLabel)
         mainCoreoLayout.setSpacing(15)
+
         #################### TEXT BOX (OTPUTS) ####################
         self.text = QPlainTextEdit()
         self.text.setReadOnly(True)
         self.text.setFont(btnFont)
-
         tempLayout = QHBoxLayout()
         tempLayout.addLayout(mainCoreoLayout)
         tempLayout.addWidget(self.text)
@@ -142,9 +141,7 @@ class MainWindow(QMainWindow):
     def getData(self):
         global b
         b = [n for n in pybullet_simulation.servoValues]
-        data.append(b)
         self.message("Current postion saved!")
-        #self.message(str(data))
     def sendData(self):
         for i in range(len(b)):
             self.dials[i].itemAt(0).widget().setValue(int(b[i]))
@@ -161,25 +158,54 @@ class MainWindow(QMainWindow):
         pybullet_simulation.servoValues[a] = deg2rad(dialValue)
     # COREOGRAPHY FUNCTIONS
     def newCoreo(self):
-        pass
+        self.x = QFileDialog()
+        self.filename = self.x.getSaveFileName(filter="CSV Files (*.csv)")
+        if self.filename[0] != "":
+            global currentCoreo
+            currentCoreo = os.path.basename(self.filename[0])
+            global currentCoreoLabel
+            currentCoreoLabel.setText("Current Coreography" + currentCoreo)
+            open(currentCoreo,"w")
+        else:
+            pass
+
     def loadCoreo(self):
-        pass
+        self.x = QFileDialog()
+        self.filename = self.x.getOpenFileName()
+        if self.filename[0] != "":
+            global currentCoreo
+            currentCoreo = os.path.basename(self.filename[0])
+            self.f = open(currentCoreo,"r+")
+            lines = self.f.readlines()
+            global currentCoreoLabel
+            currentCoreoLabel.setText("Current Coreography: " + currentCoreo)
+        else:
+            pass
     def addCoreo(self):
-        pass
+        with open(currentCoreo,"a") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(pybullet_simulation.servoValues)
+        self.message("Position saved to coreography!")
+        
     def removeCoreo(self):
-        pass
+        with open(currentCoreo,"r+") as csvfile:
+            lines = csvfile.readlines()
+            lines.pop()
+            csvfile = open(currentCoreo, "w+")
+            csvfile.truncate(0)
+            csvfile.writelines(lines)
+            
+        self.message("Position removed from coreograhy!")
+        
     def clearCoreo(self):
-        pass
+        self.message("Coreography cleared!")
     def deleteCoreo(self):
-        pass
+        self.message("Coreography has been deleted!")
     def playCoreo(self):
-        pass
+        self.message("Playing coreography...")
     # MISC FUNCTIONS
     def message(self, s):
         self.text.appendPlainText(s)
-
-
-
 
 app = QApplication(sys.argv)
 

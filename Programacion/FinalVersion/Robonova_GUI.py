@@ -10,9 +10,10 @@ import pybullet_simulation
 import GUI_Functions
 import time
 from math import ceil
-from numpy import deg2rad
+from numpy import deg2rad, arange
 import os as os
 from functools import partial
+from scipy import interpolate
 pybullet_simulation.servoValues = deg2rad([0,0,-45,0,0,-60,0,0,0,0,45,0,0,-60,0,0])
 t1 = threading.Thread(target=pybullet_simulation.pb,args=())
 t1.start()
@@ -228,7 +229,18 @@ class MainWindow(QMainWindow):
                 if not line:
                     continue
                 rows.append(line)
-            self.t2 = threading.Thread(target=GUI_Functions.repeatCoreo,args=(rows,self.t2stop))
+
+        if self.smoothTrajectoryCB.isChecked():
+            t = 1
+            dt = 0.01
+            x = range(len(rows))
+            y = rows
+            cs = interpolate.CubicSpline(x,y)
+            xs = arange(0,t,dt)
+            rows = cs(xs)
+        self.t2 = threading.Thread(target=GUI_Functions.repeatCoreo,args=(rows,self.t2stop))
+
+
         if buttonPressed["buttonPressed"] == True:
             if (self.repeatCoreoCB.isChecked() and not(self.t2.is_alive())) == True:
                 self.repeating = True
@@ -239,22 +251,14 @@ class MainWindow(QMainWindow):
                     coreoPosition = [float(x) for x in rows[i] ]
                     pybullet_simulation.servoValues = coreoPosition
                     time.sleep(0.1)
-
-        print(not(self.repeatCoreoCB.isChecked()))
-        print(self.t2.is_alive())
-        print("\n")
+                self.message("Coreography done!")
 
         if (not(self.repeatCoreoCB.isChecked()) and self.repeating) == True:
             self.repeating = False
             self.t2stop.set()
-            # self.t2.join()
+            self.message("Coreography done!")
 
-        self.message("Coreography done!")
-    def repeatCoreo(self):
-        pass
-        # if self.repeatCoreoCB.isChecked != True:
-        #     self.t2stop.set()
-        #     self.t2.join()
+        
 
     def smoothTrajectory(self):
         pass

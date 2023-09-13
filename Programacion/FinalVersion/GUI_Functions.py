@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton,
 from PyQt5.QtCore import (Qt)
 from numpy import rad2deg, ceil, deg2rad
 
+import pybullet_simulation
+import time
 def addDial(self, name, lower_limit, upper_limit, initial_value, num):
     # Dial Widget
     self.dial = QDial()
@@ -67,4 +69,9 @@ def dialsLayout(LayoutList):
                 layout.addLayout(LayoutList[i+columns],j,i)
     return layout
 
-
+def repeatCoreo(rows,stop_event):
+    while not stop_event.is_set():
+        for i in range(len(rows)):
+            coreoPosition = [float(x) for x in rows[i] ]
+            pybullet_simulation.servoValues = coreoPosition
+            time.sleep(0.1)

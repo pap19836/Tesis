@@ -12,7 +12,7 @@ import time
 from math import ceil
 from numpy import deg2rad
 import os as os
-import pandas as pd
+from functools import partial
 pybullet_simulation.servoValues = deg2rad([0,0,-45,0,0,-60,0,0,0,0,45,0,0,-60,0,0])
 t1 = threading.Thread(target=pybullet_simulation.pb,args=())
 t1.start()
@@ -82,8 +82,10 @@ class MainWindow(QMainWindow):
         self.clearCoreoBtn = QPushButton("Clear coreography")
         self.deleteCoreoBtn = QPushButton("Delete Coreography File")
         self.playCoreoBtn = QPushButton("Play coreography")
-        global currentCoreoLabel
-        currentCoreoLabel = QLabel("Current Coreography: "+ currentCoreo)
+        self.smoothTrajectoryCB = QCheckBox("Smooth trajectory")
+        self.repeatCoreoCB = QCheckBox("Repeat coreography")
+        #global currentCoreoLabel
+        self.currentCoreoLabel = QLabel("Current Coreography: "+ currentCoreo)
         # Customize
         self.newCoreoBtn.setFont(btnFont)
         self.loadCoreoBtn.setFont(btnFont)
@@ -99,7 +101,9 @@ class MainWindow(QMainWindow):
         self.removeCoreoBtn.pressed.connect(self.removeCoreo)
         self.clearCoreoBtn.pressed.connect(self.clearCoreo)
         self.deleteCoreoBtn.pressed.connect(self.deleteCoreo)
-        self.playCoreoBtn.pressed.connect(self.playCoreo)
+        self.playCoreoBtn.pressed.connect(partial(self.playCoreo, buttonPressed = True))
+        self.smoothTrajectoryCB.stateChanged.connect(self.smoothTrajectory)
+        self.repeatCoreoCB.stateChanged.connect(partial(self.playCoreo, buttonPressed = False))
         # Layout
         coreoLayout1 = QGridLayout()
         coreoLayout1.addWidget(self.newCoreoBtn, 0, 0)
@@ -109,12 +113,16 @@ class MainWindow(QMainWindow):
         coreoLayout1.addWidget(self.clearCoreoBtn, 2, 0)
         coreoLayout1.addWidget(self.deleteCoreoBtn, 2, 1)
         coreoLayout1.setSpacing(15)
-        coreoLabelsLayout = QHBoxLayout()
-        coreoLabelsLayout.addWidget(currentCoreoLabel)
+        #coreoLabelsLayout = QHBoxLayout()
+        #coreoLabelsLayout.addWidget(self.currentCoreoLabel)
         mainCoreoLayout = QVBoxLayout()
         mainCoreoLayout.addLayout(coreoLayout1)
         mainCoreoLayout.addWidget(self.playCoreoBtn)
-        mainCoreoLayout.addWidget(currentCoreoLabel)
+        coreoLayout2 = QHBoxLayout()
+        coreoLayout2.addWidget(self.smoothTrajectoryCB)
+        coreoLayout2.addWidget(self.repeatCoreoCB)
+        mainCoreoLayout.addLayout(coreoLayout2)
+        mainCoreoLayout.addWidget(self.currentCoreoLabel)
         mainCoreoLayout.setSpacing(15)
 
         #################### TEXT BOX (OTPUTS) ####################
@@ -163,8 +171,8 @@ class MainWindow(QMainWindow):
         if self.filename[0] != "":
             global currentCoreo
             currentCoreo = os.path.basename(self.filename[0])
-            global currentCoreoLabel
-            currentCoreoLabel.setText("Current Coreography: " + currentCoreo)
+            #global currentCoreoLabel
+            self.currentCoreoLabel.setText("Current Coreography: " + currentCoreo)
         else:
             pass
 
@@ -174,8 +182,8 @@ class MainWindow(QMainWindow):
         if self.filename[0] != "":
             global currentCoreo
             currentCoreo = os.path.basename(self.filename[0])
-            global currentCoreoLabel
-            currentCoreoLabel.setText("Current Coreography: " + currentCoreo)
+            #global currentCoreoLabel
+            self.currentCoreoLabel.setText("Current Coreography: " + currentCoreo)
         else:
             pass
     def addCoreo(self):
@@ -204,10 +212,14 @@ class MainWindow(QMainWindow):
         if os.path.exists(currentCoreo):
             os.remove(currentCoreo)
             self.message("Coreography has been deleted!")
-            currentCoreoLabel.setText("Current Coreography: ")
+            self.currentCoreoLabel.setText("Current Coreography: ")
         else:
             self.message("No coreography selected")
-    def playCoreo(self):
+    
+    
+    t2stop = threading.Event()
+    repeating = False
+    def playCoreo(self, **buttonPressed):
         self.message("Playing coreography...")
         with open(currentCoreo, "r+") as csvfile:
             reader = csv.reader(csvfile)
@@ -216,11 +228,36 @@ class MainWindow(QMainWindow):
                 if not line:
                     continue
                 rows.append(line)
-            for i in range(len(rows)):
-                coreoPosition = [float(x) for x in rows[i] ]
-                pybullet_simulation.servoValues = coreoPosition
-                time.sleep(0.1)
+            self.t2 = threading.Thread(target=GUI_Functions.repeatCoreo,args=(rows,self.t2stop))
+        if buttonPressed["buttonPressed"] == True:
+            if (self.repeatCoreoCB.isChecked() and not(self.t2.is_alive())) == True:
+                self.repeating = True
+                self.t2stop.clear()
+                self.t2.start()
+            else:
+                for i in range(len(rows)):
+                    coreoPosition = [float(x) for x in rows[i] ]
+                    pybullet_simulation.servoValues = coreoPosition
+                    time.sleep(0.1)
+
+        print(not(self.repeatCoreoCB.isChecked()))
+        print(self.t2.is_alive())
+        print("\n")
+
+        if (not(self.repeatCoreoCB.isChecked()) and self.repeating) == True:
+            self.repeating = False
+            self.t2stop.set()
+            # self.t2.join()
+
         self.message("Coreography done!")
+    def repeatCoreo(self):
+        pass
+        # if self.repeatCoreoCB.isChecked != True:
+        #     self.t2stop.set()
+        #     self.t2.join()
+
+    def smoothTrajectory(self):
+        pass
             
     # MISC FUNCTIONS
     def message(self, s):

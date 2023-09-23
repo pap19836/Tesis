@@ -10,7 +10,7 @@ import pybullet_simulation
 import GUI_Functions
 import time
 from math import ceil
-from numpy import deg2rad, arange
+from numpy import deg2rad, arange, interp
 import os as os
 from functools import partial
 from scipy import interpolate
@@ -74,19 +74,19 @@ class MainWindow(QMainWindow):
         self.dials[15].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(15))
         # Layout
         dialsLayout = GUI_Functions.dialsLayout(self.dials)
-        #################### COREOGRAPHY BUTTONS ####################
+        #################### choreography BUTTONS ####################
         # Desing
-        self.newCoreoBtn = QPushButton("New Coreography")
-        self.loadCoreoBtn = QPushButton("Load Coreography")
-        self.addCoreoBtn = QPushButton("Add current position\nto coreography")
-        self.removeCoreoBtn = QPushButton("Remove last saved\nposition from coreography")
-        self.clearCoreoBtn = QPushButton("Clear coreography")
-        self.deleteCoreoBtn = QPushButton("Delete Coreography File")
-        self.playCoreoBtn = QPushButton("Play coreography")
+        self.newCoreoBtn = QPushButton("New choreography")
+        self.loadCoreoBtn = QPushButton("Load choreography")
+        self.addCoreoBtn = QPushButton("Add current position\nto choreography")
+        self.removeCoreoBtn = QPushButton("Remove last saved\nposition from choreography")
+        self.clearCoreoBtn = QPushButton("Clear choreography")
+        self.deleteCoreoBtn = QPushButton("Delete choreography File")
+        self.playCoreoBtn = QPushButton("Play choreography")
         self.smoothTrajectoryCB = QCheckBox("Smooth trajectory")
-        self.repeatCoreoCB = QCheckBox("Repeat coreography")
+        self.repeatCoreoCB = QCheckBox("Repeat choreography")
         #global currentCoreoLabel
-        self.currentCoreoLabel = QLabel("Current Coreography: "+ currentCoreo)
+        self.currentCoreoLabel = QLabel("Current choreography: "+ currentCoreo)
         # Customize
         self.newCoreoBtn.setFont(btnFont)
         self.loadCoreoBtn.setFont(btnFont)
@@ -103,7 +103,6 @@ class MainWindow(QMainWindow):
         self.clearCoreoBtn.pressed.connect(self.clearCoreo)
         self.deleteCoreoBtn.pressed.connect(self.deleteCoreo)
         self.playCoreoBtn.pressed.connect(partial(self.playCoreo, buttonPressed = True))
-        self.smoothTrajectoryCB.stateChanged.connect(self.smoothTrajectory)
         self.repeatCoreoCB.stateChanged.connect(partial(self.playCoreo, buttonPressed = False))
         # Layout
         coreoLayout1 = QGridLayout()
@@ -165,7 +164,7 @@ class MainWindow(QMainWindow):
         valueLabel =self.dials[a].itemAt(1).itemAt(1).widget()
         valueLabel.setText(str(dialValue))
         pybullet_simulation.servoValues[a] = deg2rad(dialValue)
-    # COREOGRAPHY FUNCTIONS
+    # choreography FUNCTIONS
     def newCoreo(self):
         self.x = QFileDialog()
         self.filename = self.x.getSaveFileName(filter="CSV Files (*.csv)")
@@ -173,25 +172,25 @@ class MainWindow(QMainWindow):
             global currentCoreo
             currentCoreo = os.path.basename(self.filename[0])
             #global currentCoreoLabel
-            self.currentCoreoLabel.setText("Current Coreography: " + currentCoreo)
+            self.currentCoreoLabel.setText("Current choreography: " + currentCoreo)
         else:
             pass
 
     def loadCoreo(self):
         self.x = QFileDialog()
-        self.filename = self.x.getOpenFileName()
+        self.filename = self.x.getOpenFileName(filter="CSV Files (*.csv)")
         if self.filename[0] != "":
             global currentCoreo
             currentCoreo = os.path.basename(self.filename[0])
             #global currentCoreoLabel
-            self.currentCoreoLabel.setText("Current Coreography: " + currentCoreo)
+            self.currentCoreoLabel.setText("Current choreography: " + currentCoreo)
         else:
             pass
     def addCoreo(self):
         with open(currentCoreo,"a") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(pybullet_simulation.servoValues)
-        self.message("Position saved to coreography!")
+        self.message("Position saved to choreography!")
         
     def removeCoreo(self):
         with open(currentCoreo,"r+") as csvfile:
@@ -208,20 +207,20 @@ class MainWindow(QMainWindow):
             csvfile = open(currentCoreo, "w+")
             csvfile.truncate(0)
             csvfile.writelines(lines)
-        self.message("Coreography cleared!")
+        self.message("Choreography cleared!")
     def deleteCoreo(self):
         if os.path.exists(currentCoreo):
             os.remove(currentCoreo)
-            self.message("Coreography has been deleted!")
-            self.currentCoreoLabel.setText("Current Coreography: ")
+            self.message("Choreography has been deleted!")
+            self.currentCoreoLabel.setText("Current choreography: ")
         else:
-            self.message("No coreography selected")
+            self.message("No choreography selected")
     
     
     t2stop = threading.Event()
     repeating = False
     def playCoreo(self, **buttonPressed):
-        self.message("Playing coreography...")
+        self.message("Playing choreography...")
         with open(currentCoreo, "r+") as csvfile:
             reader = csv.reader(csvfile)
             rows = []
@@ -229,17 +228,15 @@ class MainWindow(QMainWindow):
                 if not line:
                     continue
                 rows.append(line)
-
+        dt = 0.01
         if self.smoothTrajectoryCB.isChecked():
-            t = 1
-            dt = 0.01
+            t = len(rows)-1
             x = range(len(rows))
             y = rows
-            cs = interpolate.CubicSpline(x,y)
+            cs = interpolate.make_interp_spline(x,y, 1)
             xs = arange(0,t,dt)
             rows = cs(xs)
-        self.t2 = threading.Thread(target=GUI_Functions.repeatCoreo,args=(rows,self.t2stop))
-
+        self.t2 = threading.Thread(target=GUI_Functions.repeatCoreo,args=(rows,self.t2stop,self.smoothTrajectoryCB.isChecked(),dt))
 
         if buttonPressed["buttonPressed"] == True:
             if (self.repeatCoreoCB.isChecked() and not(self.t2.is_alive())) == True:
@@ -250,18 +247,16 @@ class MainWindow(QMainWindow):
                 for i in range(len(rows)):
                     coreoPosition = [float(x) for x in rows[i] ]
                     pybullet_simulation.servoValues = coreoPosition
-                    time.sleep(0.1)
-                self.message("Coreography done!")
+                    if self.smoothTrajectoryCB.isChecked():
+                        time.sleep(dt)
+                    else:
+                        time.sleep(0.1)
+                self.message("Choreography done!")
 
         if (not(self.repeatCoreoCB.isChecked()) and self.repeating) == True:
             self.repeating = False
             self.t2stop.set()
-            self.message("Coreography done!")
-
-        
-
-    def smoothTrajectory(self):
-        pass
+            self.message("Choreography done!")
             
     # MISC FUNCTIONS
     def message(self, s):

@@ -3,8 +3,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton,
                              QWidget,
                              QVBoxLayout, QHBoxLayout, QGridLayout)
 from PyQt5.QtCore import (Qt)
-from numpy import rad2deg, ceil, deg2rad
-
+from numpy import rad2deg, ceil
 import pybullet_simulation
 import time
 def addDial(self, name, lower_limit, upper_limit, initial_value, num):
@@ -51,7 +50,8 @@ def creatDials(self, info:list):
     for i in range(len(info)):
         dial = addDial(self,str(info[i][1],"utf-8"),
                        round(rad2deg(info[i][8])),
-                       round(rad2deg(info[i][9])),int(rad2deg(servoValues[i])),
+                       round(rad2deg(info[i][9])),
+                       int(rad2deg(servoValues[i])),
                        i)
         dial_list.append(dial)
     return dial_list

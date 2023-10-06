@@ -9,12 +9,13 @@ import threading
 import pybullet_simulation
 import GUI_Functions
 import time
-from math import ceil
-from numpy import deg2rad, arange, interp
+from numpy import deg2rad,rad2deg, arange
 import os as os
 from functools import partial
 from scipy import interpolate
-pybullet_simulation.servoValues = deg2rad([0,0,-45,0,0,-60,0,0,0,0,45,0,0,-60,0,0])
+pybullet_simulation.servoValues = deg2rad([0,0,-45,0,0,
+                                           -60,0,0,0,0,
+                                           45,0,0,-60,0,0])
 t1 = threading.Thread(target=pybullet_simulation.pb,args=())
 t1.start()
 time.sleep(2)
@@ -54,39 +55,58 @@ class MainWindow(QMainWindow):
 
         #################### DIALS ####################
         # Design & Customize 
-        self.dials = GUI_Functions.creatDials(self,pybullet_simulation.joints_info)
+        self.dials = GUI_Functions.creatDials(self,
+                                            pybullet_simulation.joints_info)
         # Connect
-        self.dials[0].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(0))
-        self.dials[1].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(1))
-        self.dials[2].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(2))
-        self.dials[3].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(3))
-        self.dials[4].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(4))
-        self.dials[5].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(5))
-        self.dials[6].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(6))
-        self.dials[7].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(7))
-        self.dials[8].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(8))
-        self.dials[9].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(9))
-        self.dials[10].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(10))
-        self.dials[11].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(11))
-        self.dials[12].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(12))
-        self.dials[13].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(13))
-        self.dials[14].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(14))
-        self.dials[15].itemAt(0).widget().valueChanged.connect(lambda: self.updateDial(15))
+        self.dials[0].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(0))
+        self.dials[1].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(1))
+        self.dials[2].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(2))
+        self.dials[3].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(3))
+        self.dials[4].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(4))
+        self.dials[5].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(5))
+        self.dials[6].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(6))
+        self.dials[7].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(7))
+        self.dials[8].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(8))
+        self.dials[9].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(9))
+        self.dials[10].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(10))
+        self.dials[11].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(11))
+        self.dials[12].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(12))
+        self.dials[13].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(13))
+        self.dials[14].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(14))
+        self.dials[15].itemAt(0).widget().valueChanged.connect(lambda: 
+                                                        self.updateDial(15))
         # Layout
         dialsLayout = GUI_Functions.dialsLayout(self.dials)
         #################### choreography BUTTONS ####################
         # Desing
         self.newCoreoBtn = QPushButton("New choreography")
         self.loadCoreoBtn = QPushButton("Load choreography")
-        self.addCoreoBtn = QPushButton("Add current position\nto choreography")
-        self.removeCoreoBtn = QPushButton("Remove last saved\nposition from choreography")
+        self.addCoreoBtn = QPushButton(
+            "Add current position\nto choreography")
+        self.removeCoreoBtn = QPushButton(
+            "Remove last saved\nposition from choreography")
         self.clearCoreoBtn = QPushButton("Clear choreography")
         self.deleteCoreoBtn = QPushButton("Delete choreography File")
         self.playCoreoBtn = QPushButton("Play choreography")
         self.smoothTrajectoryCB = QCheckBox("Smooth trajectory")
         self.repeatCoreoCB = QCheckBox("Repeat choreography")
-        #global currentCoreoLabel
-        self.currentCoreoLabel = QLabel("Current choreography: "+ currentCoreo)
+        self.currentCoreoLabel = QLabel(
+            "Current choreography: "+ currentCoreo)
         # Customize
         self.newCoreoBtn.setFont(btnFont)
         self.loadCoreoBtn.setFont(btnFont)
@@ -102,8 +122,10 @@ class MainWindow(QMainWindow):
         self.removeCoreoBtn.pressed.connect(self.removeCoreo)
         self.clearCoreoBtn.pressed.connect(self.clearCoreo)
         self.deleteCoreoBtn.pressed.connect(self.deleteCoreo)
-        self.playCoreoBtn.pressed.connect(partial(self.playCoreo, buttonPressed = True))
-        self.repeatCoreoCB.stateChanged.connect(partial(self.playCoreo, buttonPressed = False))
+        self.playCoreoBtn.pressed.connect(
+            partial(self.playCoreo, buttonPressed = True))
+        self.repeatCoreoCB.stateChanged.connect(
+            partial(self.playCoreo, buttonPressed = False))
         # Layout
         coreoLayout1 = QGridLayout()
         coreoLayout1.addWidget(self.newCoreoBtn, 0, 0)
@@ -113,8 +135,6 @@ class MainWindow(QMainWindow):
         coreoLayout1.addWidget(self.clearCoreoBtn, 2, 0)
         coreoLayout1.addWidget(self.deleteCoreoBtn, 2, 1)
         coreoLayout1.setSpacing(15)
-        #coreoLabelsLayout = QHBoxLayout()
-        #coreoLabelsLayout.addWidget(self.currentCoreoLabel)
         mainCoreoLayout = QVBoxLayout()
         mainCoreoLayout.addLayout(coreoLayout1)
         mainCoreoLayout.addWidget(self.playCoreoBtn)
@@ -152,7 +172,7 @@ class MainWindow(QMainWindow):
         self.message("Current postion saved!")
     def sendData(self):
         for i in range(len(b)):
-            self.dials[i].itemAt(0).widget().setValue(int(b[i]))
+            self.dials[i].itemAt(0).widget().setValue(int(rad2deg(b[i])))
         pybullet_simulation.servoValues = b
         self.message("Loaded saved position to simulation!")
     def connectRobonva(self):
@@ -171,8 +191,8 @@ class MainWindow(QMainWindow):
         if self.filename[0] != "":
             global currentCoreo
             currentCoreo = os.path.basename(self.filename[0])
-            #global currentCoreoLabel
-            self.currentCoreoLabel.setText("Current choreography: " + currentCoreo)
+            self.currentCoreoLabel.setText(
+                "Current choreography: " + currentCoreo)
         else:
             pass
 
@@ -182,82 +202,111 @@ class MainWindow(QMainWindow):
         if self.filename[0] != "":
             global currentCoreo
             currentCoreo = os.path.basename(self.filename[0])
-            #global currentCoreoLabel
-            self.currentCoreoLabel.setText("Current choreography: " + currentCoreo)
+            self.currentCoreoLabel.setText(
+                "Current choreography: " + currentCoreo)
         else:
             pass
     def addCoreo(self):
-        with open(currentCoreo,"a") as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(pybullet_simulation.servoValues)
-        self.message("Position saved to choreography!")
-        
+        try:
+            with open(currentCoreo,"a") as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(pybullet_simulation.servoValues)
+            self.message("Position saved to choreography!")
+        except FileNotFoundError:
+            self.message("Choreography does not exist or has not been selected")
     def removeCoreo(self):
-        with open(currentCoreo,"r+") as csvfile:
-            lines = csvfile.readlines()
-            lines.pop()
-            csvfile = open(currentCoreo, "w+")
-            csvfile.truncate(0)
-            csvfile.writelines(lines)
-        self.message("Position removed from coreograhy!")
-        
+        try:
+            with open(currentCoreo, "r+") as csvfile:
+                lines = csvfile.readlines()
+                updatedlines = []
+                for line in lines:
+                    if line == "\n":
+                        continue
+                    updatedlines.append(line)
+                updatedlines.pop()
+                lines = ""
+                csvfile.truncate(0)
+                csvfile.writelines(lines)
+            with open(currentCoreo, "w+") as csvfile:
+                csvfile.writelines(updatedlines)
+            self.message("Position removed from coreograhy!")
+        except (FileNotFoundError, IndexError) as err:
+            if isinstance(err,FileNotFoundError):
+                self.message("Choreography does not exist or has not been selected")
+            elif isinstance(err,IndexError):
+                self.message("Choreography is already empty!")
+            else:
+                self.message("Unknown Error")
     def clearCoreo(self):
-        with open(currentCoreo,"r+") as csvfile:
-            lines = ""
-            csvfile = open(currentCoreo, "w+")
-            csvfile.truncate(0)
-            csvfile.writelines(lines)
-        self.message("Choreography cleared!")
+        try:
+            with open(currentCoreo,"r+") as csvfile:
+                lines = ""
+                csvfile.truncate(0)
+                csvfile.writelines(lines)
+            self.message("Choreography cleared!")
+        except FileNotFoundError:
+            self.message("Choreography does not exist or has not been selected")
     def deleteCoreo(self):
-        if os.path.exists(currentCoreo):
+        try:
             os.remove(currentCoreo)
             self.message("Choreography has been deleted!")
             self.currentCoreoLabel.setText("Current choreography: ")
-        else:
-            self.message("No choreography selected")
-    
+        except FileNotFoundError:
+            self.message("Choreography does not exist or has not been selected")
     
     t2stop = threading.Event()
     repeating = False
     def playCoreo(self, **buttonPressed):
-        self.message("Playing choreography...")
-        with open(currentCoreo, "r+") as csvfile:
-            reader = csv.reader(csvfile)
-            rows = []
-            for line in reader:
-                if not line:
-                    continue
-                rows.append(line)
-        dt = 0.01
-        if self.smoothTrajectoryCB.isChecked():
-            t = len(rows)-1
-            x = range(len(rows))
-            y = rows
-            cs = interpolate.make_interp_spline(x,y, 1)
-            xs = arange(0,t,dt)
-            rows = cs(xs)
-        self.t2 = threading.Thread(target=GUI_Functions.repeatCoreo,args=(rows,self.t2stop,self.smoothTrajectoryCB.isChecked(),dt))
+        try:
+            with open(currentCoreo, "r+") as csvfile:
+                reader = csv.reader(csvfile)
+                rows = []
+                for line in reader:
+                    if not line:
+                        continue
+                    rows.append(line)
+            dt = 0.01
+            if self.smoothTrajectoryCB.isChecked():
+                t = len(rows)-1
+                x = range(len(rows))
+                y = rows
+                cs = interpolate.make_interp_spline(x,y, 1)
+                xs = arange(0,t,dt)
+                rows = cs(xs)
+            self.t2 = threading.Thread(target=GUI_Functions.repeatCoreo,
+                    args=(rows,self.t2stop,self.smoothTrajectoryCB.isChecked(),dt))
 
-        if buttonPressed["buttonPressed"] == True:
-            if (self.repeatCoreoCB.isChecked() and not(self.t2.is_alive())) == True:
-                self.repeating = True
-                self.t2stop.clear()
-                self.t2.start()
-            else:
-                for i in range(len(rows)):
-                    coreoPosition = [float(x) for x in rows[i] ]
-                    pybullet_simulation.servoValues = coreoPosition
-                    if self.smoothTrajectoryCB.isChecked():
-                        time.sleep(dt)
-                    else:
-                        time.sleep(0.1)
+            if buttonPressed["buttonPressed"] == True:
+                if (self.repeatCoreoCB.isChecked() 
+                    and not(self.t2.is_alive())) == True:
+                    self.message("Playing choreography...")
+                    self.repeating = True
+                    self.t2stop.clear()
+                    self.t2.start()
+                else:
+                    self.message("Playing choreography...")
+                    for i in range(len(rows)-1):
+                        coreoPosition = [float(x) for x in rows[i] ]
+                        pybullet_simulation.servoValues = coreoPosition
+                        if self.smoothTrajectoryCB.isChecked():
+                            time.sleep(dt)
+                        else:
+                            time.sleep(0.1)
+                    coreoPosition = [float(x) for x in rows[-1]]
+                    for a in range(len(coreoPosition)):
+                        dialValue =self.dials[a].itemAt(0).widget().setValue(int(rad2deg(coreoPosition[a])))
+                    self.message("Choreography done!")
+
+            if (not(self.repeatCoreoCB.isChecked()) 
+                and self.repeating) == True:
+                self.repeating = False
+                self.t2stop.set()
                 self.message("Choreography done!")
-
-        if (not(self.repeatCoreoCB.isChecked()) and self.repeating) == True:
-            self.repeating = False
-            self.t2stop.set()
-            self.message("Choreography done!")
-            
+        except (FileNotFoundError,IndexError) as err:
+            if(isinstance(err,FileNotFoundError)):
+                self.message("Choreography does not exist or has not been selected")
+            elif(isinstance(err,IndexError)):
+                self.message("Cannot play empty choreography")
     # MISC FUNCTIONS
     def message(self, s):
         self.text.appendPlainText(s)

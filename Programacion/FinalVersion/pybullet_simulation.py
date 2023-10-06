@@ -1,7 +1,7 @@
 #!C:\Users\stefa\OneDrive - Universidad del Valle de Guatemala\UVG\Tesis\Programacion\tesis_env\Scripts\python.exe"
 import pybullet
 import pybullet_data
-from numpy import rad2deg, deg2rad
+from numpy import rad2deg
 # IP Socket Config
 import socket
 import json
@@ -20,13 +20,17 @@ def pb():
     pybullet.connect(pybullet.GUI)
     pybullet.resetSimulation()
     pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI,0)
-    pybullet.resetDebugVisualizerCamera( cameraDistance=0.8, cameraYaw=45, cameraPitch=-30, cameraTargetPosition=[0,0,0.25])
+    pybullet.resetDebugVisualizerCamera(cameraDistance=0.8,
+                                        cameraYaw=45,
+                                        cameraPitch=-30,
+                                        cameraTargetPosition=[0,0,0.25])
     # Set plane in simulation
     pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
     plane = pybullet.loadURDF("plane.urdf")
 
     # Load robot URDF
-    robot = pybullet.loadURDF("Programacion/FinalVersion/robonova/robot.urdf",[0,0,0.32],useFixedBase=1)
+    robot = pybullet.loadURDF("Programacion/FinalVersion/robonova/robot.urdf",
+                              [0,0,0.32],useFixedBase=1)
 
     # Get Robot info and Initialize servos
     numJoints = pybullet.getNumJoints(robot)
@@ -48,10 +52,14 @@ def pb():
     old_servo_values = [1000]
     connected = False
     # Run Simulation
-    pybullet.setJointMotorControlArray(robot,joint_number,pybullet.POSITION_CONTROL, servoValues, maxForce)
+    pybullet.setJointMotorControlArray(robot,joint_number,
+                                       pybullet.POSITION_CONTROL,
+                                       servoValues, maxForce)
     while True:
         pybullet.stepSimulation()
-        pybullet.setJointMotorControlArray(robot,joint_number,pybullet.POSITION_CONTROL, servoValues, maxForce)
+        pybullet.setJointMotorControlArray(robot,joint_number,
+                                           pybullet.POSITION_CONTROL,
+                                           servoValues, maxForce)
         servo2 = []
 
         if activeConnection == True and connected == False:

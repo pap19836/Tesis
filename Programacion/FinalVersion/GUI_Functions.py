@@ -69,12 +69,16 @@ def dialsLayout(LayoutList):
                 layout.addLayout(LayoutList[i+columns],j,i)
     return layout
 
-def repeatCoreo(rows,stop_event,smooth,dt):
-    while not stop_event.is_set():
+def repeatCoreo(self,rows,stop_event,smooth,dt):
+    while True:
         for i in range(len(rows)):
             coreoPosition = [float(x) for x in rows[i] ]
             pybullet_simulation.servoValues = coreoPosition
             if smooth:
-                time.sleep(dt)
+                time.sleep(dt/10)
             else:
                 time.sleep(0.1)
+        if stop_event.is_set():
+            for a in range(len(coreoPosition)):
+                dialValue =self.dials[a].itemAt(0).widget().setValue(int(rad2deg(coreoPosition[a])))
+            break

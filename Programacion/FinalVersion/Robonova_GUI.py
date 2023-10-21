@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.p = None
+        self.dt = 0.05
         ########## SENDING AND RECEIVING POSITION BUTTONS ##########
         # Design
         self.GetDataBtn = QPushButton("Get Data")
@@ -103,7 +103,12 @@ class MainWindow(QMainWindow):
         self.clearCoreoBtn = QPushButton("Clear choreography")
         self.deleteCoreoBtn = QPushButton("Delete choreography File")
         self.playCoreoBtn = QPushButton("Play choreography")
+        self.uploadCoreoBtn = QPushButton("Upload choregraphy")
+
         self.smoothTrajectoryCB = QCheckBox("Smooth trajectory")
+        self.dtlabel = QLabel("dt")
+        self.dtvalue = QPlainTextEdit()
+        self.dtbutton = QPushButton("Set")
         self.repeatCoreoCB = QCheckBox("Repeat choreography")
         self.currentCoreoLabel = QLabel(
             "Current choreography: "+ currentCoreo)
@@ -115,6 +120,11 @@ class MainWindow(QMainWindow):
         self.clearCoreoBtn.setFont(btnFont)
         self.deleteCoreoBtn.setFont(btnFont)
         self.playCoreoBtn.setFont(btnFont)
+        self.uploadCoreoBtn.setFont(btnFont)
+        self.uploadCoreoBtn.setFixedSize(270,40)
+        self.uploadCoreoBtn.setEnabled(False)
+        self.dtvalue.setFixedSize(50,25)
+        self.dtbutton.setFixedSize(50,25)
         # Connect
         self.newCoreoBtn.pressed.connect(self.newCoreo)
         self.loadCoreoBtn.pressed.connect(self.loadCoreo)
@@ -124,8 +134,10 @@ class MainWindow(QMainWindow):
         self.deleteCoreoBtn.pressed.connect(self.deleteCoreo)
         self.playCoreoBtn.pressed.connect(
             partial(self.playCoreo, buttonPressed = True))
+        self.uploadCoreoBtn.pressed.connect(self.uploadCoreo)
         self.repeatCoreoCB.stateChanged.connect(
             partial(self.playCoreo, buttonPressed = False))
+        self.dtbutton.pressed.connect(self.setdt)
         # Layout
         coreoLayout1 = QGridLayout()
         coreoLayout1.addWidget(self.newCoreoBtn, 0, 0)
@@ -135,13 +147,22 @@ class MainWindow(QMainWindow):
         coreoLayout1.addWidget(self.clearCoreoBtn, 2, 0)
         coreoLayout1.addWidget(self.deleteCoreoBtn, 2, 1)
         coreoLayout1.setSpacing(15)
+        coreoLayout2 = QHBoxLayout()
+        coreoLayout2.addWidget(self.playCoreoBtn)
+        coreoLayout2.addWidget(self.uploadCoreoBtn)
         mainCoreoLayout = QVBoxLayout()
         mainCoreoLayout.addLayout(coreoLayout1)
-        mainCoreoLayout.addWidget(self.playCoreoBtn)
-        coreoLayout2 = QHBoxLayout()
-        coreoLayout2.addWidget(self.smoothTrajectoryCB)
-        coreoLayout2.addWidget(self.repeatCoreoCB)
         mainCoreoLayout.addLayout(coreoLayout2)
+        dtLayout = QHBoxLayout()
+        dtLayout.addWidget(self.dtlabel)
+        dtLayout.addWidget(self.dtvalue)
+        dtLayout.addWidget(self.dtbutton)
+        dtLayout.setContentsMargins(20,0,300,0)
+        coreoLayout3 = QHBoxLayout()
+        coreoLayout3.addWidget(self.smoothTrajectoryCB)
+        coreoLayout3.addLayout(dtLayout)
+        coreoLayout3.addWidget(self.repeatCoreoCB)
+        mainCoreoLayout.addLayout(coreoLayout3)
         mainCoreoLayout.addWidget(self.currentCoreoLabel)
         mainCoreoLayout.setSpacing(15)
 
@@ -176,6 +197,7 @@ class MainWindow(QMainWindow):
         pybullet_simulation.servoValues = b
         self.message("Loaded saved position to simulation!")
     def connectRobonva(self):
+        self.uploadCoreoBtn.setEnabled(True)
         pybullet_simulation.activeConnection = self.connectCB.isChecked()
 
     # DIAL FUNCTIONS
@@ -257,24 +279,25 @@ class MainWindow(QMainWindow):
     t2stop = threading.Event()
     repeating = False
     def playCoreo(self, **buttonPressed):
+        #self.dt = 0.05
         try:
             with open(currentCoreo, "r+") as csvfile:
                 reader = csv.reader(csvfile)
-                rows = []
+                self.coreoPositions = []
                 for line in reader:
                     if not line:
                         continue
-                    rows.append(line)
-            dt = 0.01
+                    self.coreoPositions.append(line)
+            
             if self.smoothTrajectoryCB.isChecked():
-                t = len(rows)-1
-                x = range(len(rows))
-                y = rows
+                t = len(self.coreoPositions)-1
+                x = range(len(self.coreoPositions))
+                y = self.coreoPositions
                 cs = interpolate.make_interp_spline(x,y, 1)
-                xs = arange(0,t,dt)
-                rows = cs(xs)
+                xs = arange(0,t,self.dt)
+                self.coreoPositions = cs(xs)
             self.t2 = threading.Thread(target=GUI_Functions.repeatCoreo,
-                    args=(rows,self.t2stop,self.smoothTrajectoryCB.isChecked(),dt))
+                    args=(self,self.coreoPositions,self.t2stop,self.smoothTrajectoryCB.isChecked(),self.dt))
 
             if buttonPressed["buttonPressed"] == True:
                 if (self.repeatCoreoCB.isChecked() 
@@ -285,16 +308,8 @@ class MainWindow(QMainWindow):
                     self.t2.start()
                 else:
                     self.message("Playing choreography...")
-                    for i in range(len(rows)-1):
-                        coreoPosition = [float(x) for x in rows[i] ]
-                        pybullet_simulation.servoValues = coreoPosition
-                        if self.smoothTrajectoryCB.isChecked():
-                            time.sleep(dt)
-                        else:
-                            time.sleep(0.1)
-                    coreoPosition = [float(x) for x in rows[-1]]
-                    for a in range(len(coreoPosition)):
-                        dialValue =self.dials[a].itemAt(0).widget().setValue(int(rad2deg(coreoPosition[a])))
+                    self.t2stop.set()
+                    self.t2.start()
                     self.message("Choreography done!")
 
             if (not(self.repeatCoreoCB.isChecked()) 
@@ -307,6 +322,37 @@ class MainWindow(QMainWindow):
                 self.message("Choreography does not exist or has not been selected")
             elif(isinstance(err,IndexError)):
                 self.message("Cannot play empty choreography")
+
+    def uploadCoreo(self):
+        try:
+            with open(currentCoreo, "r+") as csvfile:
+                reader = csv.reader(csvfile)
+                self.coreoPositions = []
+                for line in reader:
+                    if not line:
+                        continue
+                    self.coreoPositions.append(line)
+            
+            if self.smoothTrajectoryCB.isChecked():
+                t = len(self.coreoPositions)-1
+                x = range(len(self.coreoPositions))
+                y = self.coreoPositions
+                cs = interpolate.make_interp_spline(x,y, 1)
+                xs = arange(0,t,self.dt)
+                self.coreoPositions = cs(xs)
+            pybullet_simulation.realCoreo = self.coreoPositions
+            pybullet_simulation.uploadCoreo = True
+        except (AttributeError, FileNotFoundError):
+            self.message("Choreography does not exist or has not been selected")
+
+
+    def setdt(self):
+        try:
+            self.dt = float(self.dtvalue.toPlainText())
+        except ValueError:
+            self.message("dt not specified or invalid, setting default value dt = 0.05")
+            self.dt = 0.05
+
     # MISC FUNCTIONS
     def message(self, s):
         self.text.appendPlainText(s)

@@ -11,9 +11,12 @@ def pb():
     global servoValues
     global joints_info
     global activeConnection
+    global realCoreo
+    global uploadCoreo
     activeConnection = False
-    s = socket.socket()
-    ip = '192.168.122.177'
+    uploadCoreo = False
+    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    ip = '192.168.4.32'
     port = 8091
 
     # Connect to simulation
@@ -33,16 +36,19 @@ def pb():
                               [0,0,0.32],useFixedBase=1)
 
     # Get Robot info and Initialize servos
+    
     numJoints = pybullet.getNumJoints(robot)
     joints_info = []
-    
+    joint_name = []
     for i in range(numJoints):
         x = pybullet.getJointInfo(robot,i)
         joints_info.append(x)
     joint_number = list(range(numJoints))
     joint_dict = {}
+    coreo_dict = {}
     for i in joint_number:
         joint_dict[joints_info[i][1].decode("utf-8")] = None
+        coreo_dict[joints_info[i][1].decode("utf-8")] = {}
     # Initialize Simulation
     pybullet.setGravity(0,0,-9.81)
     pybullet.setTimeStep(0.0001)
@@ -51,6 +57,7 @@ def pb():
     #global old_servo_values
     old_servo_values = [1000]
     connected = False
+
     # Run Simulation
     pybullet.setJointMotorControlArray(robot,joint_number,
                                        pybullet.POSITION_CONTROL,
@@ -70,23 +77,55 @@ def pb():
             x = servoValues[i]
             servo2.append(x)
         if (old_servo_values != servo2) & activeConnection == True:
-            joint_dict.update({'LeftShoulder1':int(rad2deg(servoValues[0])+90),
-            'LeftShoulder2':int(rad2deg(servoValues[1]))+90,
-            'RightShoulder1':int(rad2deg(servoValues[2]))+90,
-            'RightShoulder2':int(rad2deg(servoValues[3]))+90,
-            'LeftWaist':int(rad2deg(servoValues[4]))+90,
-            'LeftHip1':int(rad2deg(servoValues[5]))+90,
-            'LeftHip2':int(rad2deg(servoValues[6]))+90,
-            'LeftKnee':int(rad2deg(servoValues[7]))+90,
-            'LeftAnkle1':int(rad2deg(servoValues[8]))+90, 
-            'LeftAnkle2':int(rad2deg(servoValues[9]))+90,
-            'RightWaist':int(rad2deg(servoValues[10]))+90,
-            'RightHip1':int(rad2deg(servoValues[11]))+90,
-            'RightHip2':int(rad2deg(servoValues[12]))+90,
-            'RightKnee':int(rad2deg(servoValues[13]))+90,
-            'RightAnkle1':int(rad2deg(servoValues[14]))+90,
-            'RightAnkle2':int(rad2deg(servoValues[15]))+90})
+            n = 0
+            for key in joint_dict.keys():
+                joint_dict[key] = rad2deg(servoValues[n])+90
+                n = n+1
+            # joint_dict.update({'LeftShoulder1':rad2deg(servoValues[0])+90,
+            # 'LeftShoulder2':rad2deg(servoValues[1])+90,
+            # 'LeftWaist':rad2deg(servoValues[2])+90,
+            # 'LeftHip1':rad2deg(servoValues[3])+90,
+            # 'LeftHip2':rad2deg(servoValues[4])+90,
+            # 'LeftKnee':rad2deg(servoValues[5])+90,
+            # 'LeftAnkle1':rad2deg(servoValues[6])+90, 
+            # 'LeftAnkle2':rad2deg(servoValues[7])+90,
+            # 'RightShoulder1':rad2deg(servoValues[8])+90,
+            # 'RightShoulder2':rad2deg(servoValues[9])+90,
+            # 'RightWaist':rad2deg(servoValues[10])+90,
+            # 'RightHip1':rad2deg(servoValues[11])+90,
+            # 'RightHip2':rad2deg(servoValues[12])+90,
+            # 'RightKnee':rad2deg(servoValues[13])+90,
+            # 'RightAnkle1':rad2deg(servoValues[14])+90,
+            # 'RightAnkle2':rad2deg(servoValues[15])+90})
             old_servo_values = servo2
             data_json = json.dumps(joint_dict)
+            try:
+                s.sendall(bytes(data_json, "utf-8"))
+            except OSError:
+                pass
+            print(data_json)
+        if(uploadCoreo):
+            for key in coreo_dict.keys:
+                key.clear()
+            for n in range(len(realCoreo)):
+                print(type(realCoreo[n][0]))
+                coreo_dict['LeftShoulder1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['LeftShoulder2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['LeftWaist'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['LeftHip1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['LeftHip2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['LeftKnee'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['LeftAnkle1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['LeftAnkle2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['RightShoulder1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['RightShoulder2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['RightWaist'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['RightHip1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['RightHip2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['RightKnee'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['RightAnkle1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+                coreo_dict['RightAnkle2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+            data_json = json.dumps(coreo_dict)
             s.sendall(bytes(data_json, "utf-8"))
-            print(str(joint_dict))
+            uploadCoreo = False
+            print(data_json)

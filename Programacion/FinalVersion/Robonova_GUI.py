@@ -55,43 +55,17 @@ class MainWindow(QMainWindow):
 
         #################### DIALS ####################
         # Design & Customize 
-        self.dials = GUI_Functions.creatDials(self,
+        self.dialSubLayout = GUI_Functions.creatDials(self,
                                             pybullet_simulation.joints_info)
+        self.dials = []
+        for i in range(len(self.dialSubLayout)):
+            x = self.dialSubLayout[i].itemAt(0).widget()
+            self.dials.append(x)
         # Connect
-        self.dials[0].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(0))
-        self.dials[1].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(1))
-        self.dials[2].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(2))
-        self.dials[3].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(3))
-        self.dials[4].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(4))
-        self.dials[5].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(5))
-        self.dials[6].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(6))
-        self.dials[7].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(7))
-        self.dials[8].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(8))
-        self.dials[9].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(9))
-        self.dials[10].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(10))
-        self.dials[11].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(11))
-        self.dials[12].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(12))
-        self.dials[13].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(13))
-        self.dials[14].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(14))
-        self.dials[15].itemAt(0).widget().valueChanged.connect(lambda: 
-                                                        self.updateDial(15))
+        for i in range(len(self.dials)):
+            self.dials[i].valueChanged.connect(partial(self.updateDial,i))
         # Layout
-        dialsLayout = GUI_Functions.dialsLayout(self.dials)
+        dialsLayout = GUI_Functions.dialsLayout(self.dialSubLayout)
         #################### choreography BUTTONS ####################
         # Desing
         self.newCoreoBtn = QPushButton("New choreography")
@@ -193,7 +167,7 @@ class MainWindow(QMainWindow):
         self.message("Current postion saved!")
     def sendData(self):
         for i in range(len(b)):
-            self.dials[i].itemAt(0).widget().setValue(int(rad2deg(b[i])))
+            self.dialSubLayout[i].itemAt(0).widget().setValue(int(rad2deg(b[i])))
         pybullet_simulation.servoValues = b
         self.message("Loaded saved position to simulation!")
     def connectRobonva(self):
@@ -202,8 +176,8 @@ class MainWindow(QMainWindow):
 
     # DIAL FUNCTIONS
     def updateDial(self,a):
-        dialValue =self.dials[a].itemAt(0).widget().value()
-        valueLabel =self.dials[a].itemAt(1).itemAt(1).widget()
+        dialValue =self.dialSubLayout[a].itemAt(0).widget().value()
+        valueLabel =self.dialSubLayout[a].itemAt(1).itemAt(1).widget()
         valueLabel.setText(str(dialValue))
         pybullet_simulation.servoValues[a] = deg2rad(dialValue)
     # choreography FUNCTIONS

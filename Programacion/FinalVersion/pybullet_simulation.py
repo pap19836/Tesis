@@ -16,7 +16,7 @@ def pb():
     activeConnection = False
     uploadCoreo = False
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    ip = '192.168.150.177'
+    ip = '192.168.150.32'
     port = 8091
 
     # Connect to simulation
@@ -105,8 +105,8 @@ def pb():
                 pass
             print(data_json)
         if(uploadCoreo):
-            for key in coreo_dict.keys:
-                key.clear()
+            for key in coreo_dict.keys():
+                coreo_dict[key].clear()
             for n in range(len(realCoreo)):
                 print(type(realCoreo[n][0]))
                 coreo_dict['LeftShoulder1'][n] = (rad2deg(float(realCoreo[n][0]))+90)

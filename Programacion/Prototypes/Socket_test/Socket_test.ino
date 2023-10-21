@@ -33,7 +33,7 @@ const uint16_t port = 8091;
 WiFiServer wifiServer(port);
 StaticJsonDocument<512> doc;
 
-int servoValues[] ={90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90};
+float servoValues[] ={90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90};
 
 
 // called this way, it uses the default address 0x40
@@ -149,9 +149,9 @@ void loop() {
       }
       if(values != NULL){
         exchangeJSON(values);
-        Serial.printf("RW=%.3f RH1=%.3f RH2=%.3f RK=%.3f RA1=%.3f RA2=%.3f LW=%.3f LH1=%.3f LH2=%.3f LK=%.3f LA1=%.3f LA2=%.3f\n",
-                      float((doc["RightWaist"])), float((doc["RightHip1"])), float((doc["RightHip2"])), float((doc["RightKnee"])), float((doc["RightAnkle1"])), float((doc["RightAnkle2"])),
-                      float((doc["LeftWaist"])), float((doc["LeftHip1"])), float((doc["LeftHip2"])), float((doc["LeftKnee"])), float((doc["LeftAnkle1"])), float((doc["LeftAnkle2"])));
+        //Serial.printf("RW=%.3f RH1=%.3f RH2=%.3f RK=%.3f RA1=%.3f RA2=%.3f LW=%.3f LH1=%.3f LH2=%.3f LK=%.3f LA1=%.3f LA2=%.3f\n",
+        //              float((doc["RightWaist"])), float((doc["RightHip1"])), float((doc["RightHip2"])), float((doc["RightKnee"])), float((doc["RightAnkle1"])), float((doc["RightAnkle2"])),
+        //              float((doc["LeftWaist"])), float((doc["LeftHip1"])), float((doc["LeftHip2"])), float((doc["LeftKnee"])), float((doc["LeftAnkle1"])), float((doc["LeftAnkle2"])));
         servoValues[11] = float((doc["RightAnkle2"]));
         servoValues[9] = float((doc["RightAnkle1"]));
         servoValues[7] = float((doc["RightKnee"]));
@@ -161,25 +161,26 @@ void loop() {
 
         servoValues[10] = float((doc["LeftAnkle2"]));
         servoValues[8] = float((doc["LeftAnkle1"]));
-        servoValues[6] = float((doc["LeftKnee"]));
+        servoValues[6] = 180-float((doc["LeftKnee"]));
         servoValues[4] = float((doc["LeftHip2"]));
         servoValues[2] = float((doc["LeftHip1"]));
         servoValues[0] = float((doc["LeftWaist"]));
       }
 
       for(int i=0; i<15; i++){
+        Serial.println("sending");
         pwmLegs.writeMicroseconds(i, Deg2US ( servoValues[i], true ));
       }
 
-      //  delay(10);
+        delay(10);
     }
     client.stop();
     Serial.println("Client disconnected");
   }
 
-  for(int i=0; i<15; i++){
-    pwmLegs.writeMicroseconds(i, Deg2US ( servoValues[i], true ));
-  }
+  // for(int i=0; i<15; i++){
+  //   pwmLegs.writeMicroseconds(i, Deg2US ( servoValues[i], true ));
+  // }
 
 
 }

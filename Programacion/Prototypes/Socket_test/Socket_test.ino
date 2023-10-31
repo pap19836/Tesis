@@ -31,10 +31,27 @@ const char* password =  "2eqfy93cq4awwvp";
 const uint16_t port = 8091;
 
 WiFiServer wifiServer(port);
-StaticJsonDocument<512> doc;
+StaticJsonDocument<4096> doc;
+JsonArray LeftShoulder1 = doc["LeftShoulder1"];
+JsonArray LeftShoulder2 = doc["LeftShoulder2"];
+JsonArray LeftWaist = doc["LeftWaist"];
+JsonArray LeftHip1 = doc["LeftHip1"];
+JsonArray LeftHip2 = doc["LeftHip2"];
+JsonArray LeftKnee = doc["LeftKnee"];
+JsonArray LeftAnkle1 = doc["LeftAnkle1"];
+JsonArray LeftAnkle2 = doc["LeftAnkle2"];
+JsonArray RightShoulder1 = doc["RightShoulder1"];
+JsonArray RightShoulder2 = doc["RightShoulder2"];
+JsonArray RightWaist = doc["RightWaist"];
+JsonArray RightHip1 = doc["RightHip1"];
+JsonArray RightHip2 = doc["RightHip2"];
+JsonArray RightKnee = doc["RightKnee"];
+JsonArray RightAnkle1 = doc["RightAnkle1"];
+JsonArray RightAnkle2 = doc["RightAnkle2"];
 
 float servoValues[] ={90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90};
-
+float coreo;
+float coreo2;
 
 // called this way, it uses the default address 0x40
 Adafruit_PWMServoDriver pwmLegs = Adafruit_PWMServoDriver(0x40);
@@ -148,31 +165,75 @@ void loop() {
         values += c;
       }
       if(values != NULL){
-        exchangeJSON(values);
-        //Serial.printf("RW=%.3f RH1=%.3f RH2=%.3f RK=%.3f RA1=%.3f RA2=%.3f LW=%.3f LH1=%.3f LH2=%.3f LK=%.3f LA1=%.3f LA2=%.3f\n",
-        //              float((doc["RightWaist"])), float((doc["RightHip1"])), float((doc["RightHip2"])), float((doc["RightKnee"])), float((doc["RightAnkle1"])), float((doc["RightAnkle2"])),
-        //              float((doc["LeftWaist"])), float((doc["LeftHip1"])), float((doc["LeftHip2"])), float((doc["LeftKnee"])), float((doc["LeftAnkle1"])), float((doc["LeftAnkle2"])));
-        servoValues[11] = float((doc["RightAnkle2"]));
-        servoValues[9] = float((doc["RightAnkle1"]));
-        servoValues[7] = float((doc["RightKnee"]));
-        servoValues[5] = float((doc["RightHip2"]));
-        servoValues[3] = float((doc["RightHip1"]));
-        servoValues[1] = float((doc["RightWaist"]));
+        deserializeJson(doc, values);
+        //exchangeJSON(values);
+        
+        if (!doc["uploadCoreo"]){
+          Serial.printf("RW=%.3f RH1=%.3f RH2=%.3f RK=%.3f RA1=%.3f RA2=%.3f LW=%.3f LH1=%.3f LH2=%.3f LK=%.3f LA1=%.3f LA2=%.3f\n",
+                       float((doc["RightWaist"])), float((doc["RightHip1"])), float((doc["RightHip2"])), float((doc["RightKnee"])), float((doc["RightAnkle1"])), float((doc["RightAnkle2"])),
+                       float((doc["LeftWaist"])), float((doc["LeftHip1"])), float((doc["LeftHip2"])), float((doc["LeftKnee"])), float((doc["LeftAnkle1"])), float((doc["LeftAnkle2"])));
+          servoValues[11] = float((doc["RightAnkle2"]));
+          servoValues[9] = float((doc["RightAnkle1"]));
+          servoValues[7] = float((doc["RightKnee"]));
+          servoValues[5] = float((doc["RightHip2"]));
+          servoValues[3] = float((doc["RightHip1"]));
+          servoValues[1] = float((doc["RightWaist"]));
 
-        servoValues[10] = float((doc["LeftAnkle2"]));
-        servoValues[8] = float((doc["LeftAnkle1"]));
-        servoValues[6] = 180-float((doc["LeftKnee"]));
-        servoValues[4] = float((doc["LeftHip2"]));
-        servoValues[2] = float((doc["LeftHip1"]));
-        servoValues[0] = float((doc["LeftWaist"]));
+          servoValues[10] = float((doc["LeftAnkle2"]));
+          servoValues[8] = float((doc["LeftAnkle1"]));
+          servoValues[6] = 180-float((doc["LeftKnee"]));
+          servoValues[4] = float((doc["LeftHip2"]));
+          servoValues[2] = float((doc["LeftHip1"]));
+          servoValues[0] = float((doc["LeftWaist"]));
+        }
+
+        else if(doc["uploadCoreo"]){
+          LeftShoulder1 = doc["LeftShoulder1"];
+          LeftShoulder2 = doc["LeftShoulder2"];
+          LeftWaist = doc["LeftWaist"];
+          LeftHip1 = doc["LeftHip1"];
+          LeftHip2 = doc["LeftHip2"];
+          LeftKnee = doc["LeftKnee"];
+          LeftAnkle1 = doc["LeftAnkle1"];
+          LeftAnkle2 = doc["LeftAnkle2"];
+          RightShoulder1 = doc["RightShoulder1"];
+          RightShoulder2 = doc["RightShoulder2"];
+          RightWaist = doc["RightWaist"];
+          RightHip1 = doc["RightHip1"];
+          RightHip2 = doc["RightHip2"];
+          RightKnee = doc["RightKnee"];
+          RightAnkle1 = doc["RightAnkle1"];
+          RightAnkle2 = doc["RightAnkle2"];
+        }
       }
 
-      for(int i=0; i<15; i++){
-        Serial.println("sending");
-        pwmLegs.writeMicroseconds(i, Deg2US ( servoValues[i], true ));
+      if (!doc["uploadCoreo"]){
+        for(int i=0; i<=11; i++){
+          pwmLegs.writeMicroseconds(i, Deg2US ( servoValues[i], true ));
+        }
+      }
+      else if(!doc["uploadCoreo"]){
+        for(int i=0; i<sizeof(LeftShoulder1); i++){
+          for(int j=0; j<=11; j++){
+            servoValues[11] = RightAnkle2[i];
+            servoValues[9] = 180-float(RightAnkle1[i]);
+            servoValues[7] = RightKnee[i];
+            servoValues[5] = RightHip2[i];
+            servoValues[3] = RightHip1[i];
+            servoValues[1] = RightWaist[i];
+
+            servoValues[10] = 180-float(LeftAnkle2[i]);
+            servoValues[8] = LeftAnkle1[i];
+            servoValues[6] = 180.0-float(LeftKnee[i]);
+            servoValues[4] = float(LeftHip2[i]);
+            servoValues[2] = LeftHip1[i];
+            servoValues[0] = LeftWaist[i];
+            pwmLegs.writeMicroseconds(j, Deg2US ( servoValues[j], true ));
+          }
+          delay(0.5);
+        }
       }
 
-        delay(10);
     }
     client.stop();
     Serial.println("Client disconnected");

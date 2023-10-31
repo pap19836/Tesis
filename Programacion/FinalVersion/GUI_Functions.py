@@ -80,5 +80,5 @@ def repeatCoreo(self,rows,stop_event,smooth,dt):
                 time.sleep(0.1)
         if stop_event.is_set():
             for a in range(len(coreoPosition)):
-                dialValue =self.dials[a].itemAt(0).widget().setValue(int(rad2deg(coreoPosition[a])))
+                dialValue =self.dials[a].setValue(int(rad2deg(coreoPosition[a])))
             break

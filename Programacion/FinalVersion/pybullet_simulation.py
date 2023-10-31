@@ -5,7 +5,7 @@ from numpy import rad2deg
 # IP Socket Config
 import socket
 import json
-
+import numpy as np
 
 def pb():
     global servoValues
@@ -16,7 +16,7 @@ def pb():
     activeConnection = False
     uploadCoreo = False
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    ip = '192.168.150.32'
+    ip = '192.168.7.177'
     port = 8091
 
     # Connect to simulation
@@ -81,24 +81,10 @@ def pb():
             for key in joint_dict.keys():
                 joint_dict[key] = rad2deg(servoValues[n])+90
                 n = n+1
-            # joint_dict.update({'LeftShoulder1':rad2deg(servoValues[0])+90,
-            # 'LeftShoulder2':rad2deg(servoValues[1])+90,
-            # 'LeftWaist':rad2deg(servoValues[2])+90,
-            # 'LeftHip1':rad2deg(servoValues[3])+90,
-            # 'LeftHip2':rad2deg(servoValues[4])+90,
-            # 'LeftKnee':rad2deg(servoValues[5])+90,
-            # 'LeftAnkle1':rad2deg(servoValues[6])+90, 
-            # 'LeftAnkle2':rad2deg(servoValues[7])+90,
-            # 'RightShoulder1':rad2deg(servoValues[8])+90,
-            # 'RightShoulder2':rad2deg(servoValues[9])+90,
-            # 'RightWaist':rad2deg(servoValues[10])+90,
-            # 'RightHip1':rad2deg(servoValues[11])+90,
-            # 'RightHip2':rad2deg(servoValues[12])+90,
-            # 'RightKnee':rad2deg(servoValues[13])+90,
-            # 'RightAnkle1':rad2deg(servoValues[14])+90,
-            # 'RightAnkle2':rad2deg(servoValues[15])+90})
+            joint_dict['uploadCoreo'] = False
             old_servo_values = servo2
             data_json = json.dumps(joint_dict)
+            joint_dict.pop("uploadCoreo")
             try:
                 s.sendall(bytes(data_json, "utf-8"))
             except OSError:
@@ -107,25 +93,14 @@ def pb():
         if(uploadCoreo):
             for key in coreo_dict.keys():
                 coreo_dict[key].clear()
-            for n in range(len(realCoreo)):
-                print(type(realCoreo[n][0]))
-                coreo_dict['LeftShoulder1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['LeftShoulder2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['LeftWaist'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['LeftHip1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['LeftHip2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['LeftKnee'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['LeftAnkle1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['LeftAnkle2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['RightShoulder1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['RightShoulder2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['RightWaist'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['RightHip1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['RightHip2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['RightKnee'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['RightAnkle1'][n] = (rad2deg(float(realCoreo[n][0]))+90)
-                coreo_dict['RightAnkle2'][n] = (rad2deg(float(realCoreo[n][0]))+90)
+            realCoreo = np.array(realCoreo).T.tolist()
+            n = 0
+            for key in coreo_dict.keys():
+                coreo_dict[key] = [rad2deg(float(x))+90 for x in realCoreo[n]]
+                n = n+1
+            coreo_dict['uploadCoreo'] = uploadCoreo
             data_json = json.dumps(coreo_dict)
+            coreo_dict.pop('uploadCoreo')
             s.sendall(bytes(data_json, "utf-8"))
             uploadCoreo = False
             print(data_json)

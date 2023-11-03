@@ -6,13 +6,15 @@ from numpy import rad2deg
 import socket
 import json
 import numpy as np
-
+from PyQt5.QtGui import QImage, QPixmap
+from time import time
 def pb():
     global servoValues
     global joints_info
     global activeConnection
     global realCoreo
     global uploadCoreo
+    global simImg
     activeConnection = False
     uploadCoreo = False
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -20,9 +22,9 @@ def pb():
     port = 8091
 
     # Connect to simulation
-    pybullet.connect(pybullet.GUI)
+    pybullet.connect(pybullet.DIRECT)
     pybullet.resetSimulation()
-    pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI,0)
+    pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI,1)
     pybullet.resetDebugVisualizerCamera(cameraDistance=0.8,
                                         cameraYaw=45,
                                         cameraPitch=-30,
@@ -62,8 +64,37 @@ def pb():
     pybullet.setJointMotorControlArray(robot,joint_number,
                                        pybullet.POSITION_CONTROL,
                                        servoValues, maxForce)
+    # Simulation image
+    w = 640
+    h = 480
+    ch = 4
+    vm = pybullet.computeViewMatrixFromYawPitchRoll(
+    distance=0.5,
+    roll=0,
+    pitch=-30,
+    yaw=45,
+    cameraTargetPosition=[0,0,0.25],
+    upAxisIndex=2)
+    pm = pybullet.computeProjectionMatrixFOV(fov=90, 
+                aspect=w/h, nearVal=0.1, farVal=10)
+    #vm = pybullet.getDebugVisualizerCamera()[2]
+    #pm = pybullet.getDebugVisualizerCamera()[3]
+    nimg = 0
+
     while True:
         pybullet.stepSimulation()
+        if nimg==15:
+
+            images = pybullet.getCameraImage(w, h, viewMatrix=vm,
+                                            projectionMatrix=pm,
+                                            shadow=0,
+                            renderer=pybullet.ER_BULLET_HARDWARE_OPENGL,
+                            flags=pybullet.ER_NO_SEGMENTATION_MASK)
+            rgb = np.reshape(images[2], (w, h, ch))# * 1. / 255.
+            bpl = w*ch
+            simImg = QImage(rgb, w, h, bpl, QImage.Format_RGBA8888)
+            nimg = 0
+        nimg += 1
         pybullet.setJointMotorControlArray(robot,joint_number,
                                            pybullet.POSITION_CONTROL,
                                            servoValues, maxForce)

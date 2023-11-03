@@ -3,6 +3,9 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton,
                              QPlainTextEdit, QCheckBox, QDial, QLabel,
                              QWidget, QInputDialog, QFileDialog,
                              QVBoxLayout, QHBoxLayout, QGridLayout)
+from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtCore import Qt
+import cv2
 import sys
 import csv
 import threading
@@ -30,6 +33,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        #self.showMaximized()
         self.dt = 0.05
         ########## SENDING AND RECEIVING POSITION BUTTONS ##########
         # Design
@@ -148,13 +152,32 @@ class MainWindow(QMainWindow):
         tempLayout.addLayout(mainCoreoLayout)
         tempLayout.addWidget(self.text)
 
+        #################### IMAGES ####################
+        imagesLayout = QVBoxLayout()
+        # Step images
+        stepImg = cv2.imread("Programacion\FinalVersion\RobonovaWalking.png")
+        stepImg = cv2.cvtColor(stepImg, cv2.COLOR_BGR2RGB)
+        h, w, ch = stepImg.shape
+        bpl = w*ch
+        qImg = QImage(stepImg.data, w, h, bpl, QImage.Format_RGB888)
+        labelStep = QLabel()
+        labelStep.setPixmap(QPixmap(qImg).scaled(640,480))
+        # Simulation
+        self.lableSim = QLabel()
+        simPixMap = QPixmap(pybullet_simulation.simImg)
+        self.lableSim.setPixmap(simPixMap.scaled(640,480))
+        imagesLayout.addWidget(labelStep)
+        imagesLayout.addWidget(self.lableSim)
         #################### MAIN LAYOUT ####################
-        mainLayout = QVBoxLayout()
-        mainLayout.addLayout(layout1)
-        mainLayout.addWidget(self.connectCB)
-        mainLayout.addLayout(dialsLayout)
-        mainLayout.addLayout(tempLayout)
-        mainLayout.setSpacing(15)
+        controlLayout = QVBoxLayout()
+        controlLayout.addLayout(layout1)
+        controlLayout.addWidget(self.connectCB)
+        controlLayout.addLayout(dialsLayout)
+        controlLayout.addLayout(tempLayout)
+        controlLayout.setSpacing(15)
+        mainLayout = QHBoxLayout()
+        mainLayout.addLayout(controlLayout,2)
+        mainLayout.addLayout(imagesLayout,1)
         w = QWidget()
         w.setLayout(mainLayout)
         self.setCentralWidget(w)
@@ -180,6 +203,8 @@ class MainWindow(QMainWindow):
         valueLabel =self.dialSubLayout[a].itemAt(1).itemAt(1).widget()
         valueLabel.setText(str(dialValue))
         pybullet_simulation.servoValues[a] = deg2rad(dialValue)
+        simPixMap = QPixmap(pybullet_simulation.simImg)
+        self.lableSim.setPixmap(simPixMap.scaled(640,680))
     # choreography FUNCTIONS
     def newCoreo(self):
         self.x = QFileDialog()
@@ -334,6 +359,6 @@ class MainWindow(QMainWindow):
 app = QApplication(sys.argv)
 
 w = MainWindow()
-w.show()
+w.showMaximized()
 
 app.exec_()

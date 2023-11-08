@@ -3,8 +3,10 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton,
                              QWidget,
                              QVBoxLayout, QHBoxLayout, QGridLayout)
 from PyQt5.QtCore import (Qt)
-from numpy import rad2deg, ceil
-import pybullet_simulation
+from PyQt5.QtGui import QImage, QPixmap
+from numpy import rad2deg, ceil, reshape
+import pybullet_simulation as pb_sim
+import pybullet
 import time
 def addDial(self, name, lower_limit, upper_limit, initial_value, num):
     # Dial Widget
@@ -45,13 +47,12 @@ def addDial(self, name, lower_limit, upper_limit, initial_value, num):
     return dial_layout
 
 def creatDials(self, info:list):
-    from pybullet_simulation import servoValues
     dial_list = []
     for i in range(len(info)):
         dial = addDial(self,str(info[i][1],"utf-8"),
                        round(rad2deg(info[i][8])),
                        round(rad2deg(info[i][9])),
-                       int(rad2deg(servoValues[i])),
+                       int(rad2deg(pb_sim.servoValues[i])),
                        i)
         dial_list.append(dial)
     return dial_list
@@ -73,7 +74,7 @@ def repeatCoreo(self,rows,stop_event,smooth,dt):
     while True:
         for i in range(len(rows)):
             coreoPosition = [float(x) for x in rows[i] ]
-            pybullet_simulation.servoValues = coreoPosition
+            pb_sim.servoValues = coreoPosition
             if smooth:
                 time.sleep(dt/10)
             else:
@@ -82,3 +83,13 @@ def repeatCoreo(self,rows,stop_event,smooth,dt):
             for a in range(len(coreoPosition)):
                 dialValue =self.dials[a].setValue(int(rad2deg(coreoPosition[a])))
             break
+
+def renderImg(self,w,h,ch,vm,pm):
+    images = pybullet.getCameraImage(w, h, viewMatrix=vm,
+                                        projectionMatrix=pm)
+    rgb = reshape(images[2], (w, h, ch))# * 1. / 255.
+    bpl = w*ch
+    global simImg
+    simImg = QImage(rgb, w, h, bpl, QImage.Format_RGBA8888)
+    simPixMap = QPixmap(simImg)
+    self.labelStep.setPixmap(simPixMap.scaled(480,360))

@@ -9,17 +9,17 @@ import cv2
 import sys
 import csv
 import threading
-import pybullet_simulation
+import pybullet_simulation as pb_sim
 import GUI_Functions
 import time
 from numpy import deg2rad,rad2deg, arange
 import os as os
 from functools import partial
 from scipy import interpolate
-pybullet_simulation.servoValues = deg2rad([0,0,-45,0,0,
+pb_sim.servoValues = deg2rad([0,0,-45,0,0,
                                            -60,0,0,0,0,
                                            45,0,0,-60,0,0])
-t1 = threading.Thread(target=pybullet_simulation.pb,args=())
+t1 = threading.Thread(target=pb_sim.pb,args=())
 t1.start()
 time.sleep(2)
 
@@ -32,35 +32,36 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-
         #self.showMaximized()
         self.dt = 0.05
         ########## SENDING AND RECEIVING POSITION BUTTONS ##########
         # Design
-        self.GetDataBtn = QPushButton("Get Data")
-        self.SendDataBtn = QPushButton("Send Data")
+        # Obsolete SendData & GetData
+        # self.GetDataBtn = QPushButton("Get Data")
+        # self.SendDataBtn = QPushButton("Send Data")
         self.connectCB = QCheckBox("Connect to Robonova")
         # Connect
-        self.GetDataBtn.pressed.connect(self.getData)
-        self.SendDataBtn.pressed.connect(self.sendData)
+        # self.GetDataBtn.pressed.connect(self.getData)
+        # self.SendDataBtn.pressed.connect(self.sendData)
         self.connectCB.stateChanged.connect(self.connectRobonva)
         # Customize
-        btnFont = self.GetDataBtn.font()
+        # btnFont = self.GetDataBtn.font()
+        # btnFont.setPointSize(20)
+        # self.GetDataBtn.setFont(btnFont)
+        # self.SendDataBtn.setFont(btnFont)
+        btnFont = self.connectCB.font()
         btnFont.setPointSize(20)
-        self.GetDataBtn.setFont(btnFont)
-        self.SendDataBtn.setFont(btnFont)
-        checkFont = self.GetDataBtn.font()
-        checkFont.setPointSize(15)
-        self.connectCB.setFont(checkFont)
-        # Layout
-        layout1 = QHBoxLayout()
-        layout1.addWidget(self.GetDataBtn)
-        layout1.addWidget(self.SendDataBtn)
+        self.connectCB.setFont(btnFont)
+        # # Layout
+        # Obsolete SendData & GetData
+        # layout1 = QHBoxLayout()
+        # layout1.addWidget(self.GetDataBtn)
+        # layout1.addWidget(self.SendDataBtn)
 
         #################### DIALS ####################
         # Design & Customize 
         self.dialSubLayout = GUI_Functions.creatDials(self,
-                                            pybullet_simulation.joints_info)
+                                            pb_sim.joints_info)
         self.dials = []
         for i in range(len(self.dialSubLayout)):
             x = self.dialSubLayout[i].itemAt(0).widget()
@@ -148,70 +149,92 @@ class MainWindow(QMainWindow):
         self.text = QPlainTextEdit()
         self.text.setReadOnly(True)
         self.text.setFont(btnFont)
-        tempLayout = QHBoxLayout()
-        tempLayout.addLayout(mainCoreoLayout)
-        tempLayout.addWidget(self.text)
+        coreoAndTextLayout = QVBoxLayout()
+        coreoAndTextLayout.addLayout(mainCoreoLayout)
+        coreoAndTextLayout.addWidget(self.text)
 
         #################### IMAGES ####################
-        imagesLayout = QVBoxLayout()
+        imgTitle = QLabel("Current step preview:")
+        prevImgBtn = QPushButton("<<")
+        currentImg = QLabel("x of x")
+
+        nextImgBtn = QPushButton(">>")
+        
+        self.imgW = 480
+        self.imgH = 360
         # Step images
         stepImg = cv2.imread("Programacion\FinalVersion\RobonovaWalking.png")
         stepImg = cv2.cvtColor(stepImg, cv2.COLOR_BGR2RGB)
         h, w, ch = stepImg.shape
         bpl = w*ch
         qImg = QImage(stepImg.data, w, h, bpl, QImage.Format_RGB888)
-        labelStep = QLabel()
-        labelStep.setPixmap(QPixmap(qImg).scaled(640,480))
-        # Simulation
-        self.lableSim = QLabel()
-        simPixMap = QPixmap(pybullet_simulation.simImg)
-        self.lableSim.setPixmap(simPixMap.scaled(640,480))
-        imagesLayout.addWidget(labelStep)
-        imagesLayout.addWidget(self.lableSim)
+        stepImg = QLabel()
+        stepImg.setPixmap(QPixmap(qImg).scaled(self.imgW,self.imgH))
+        
+        imgBtnLayout = QHBoxLayout()
+        imgBtnLayout.addWidget(prevImgBtn,2)
+        imgBtnLayout.addWidget(currentImg,1)
+        imgBtnLayout.addWidget(nextImgBtn,2)
+        imgLayout = QVBoxLayout()
+        imgLayout.addWidget(imgTitle)
+        imgLayout.addWidget(stepImg)
+        imgLayout.addLayout(imgBtnLayout)
+
+        imgAndCoreoLayout = QHBoxLayout()
+        imgAndCoreoLayout.addLayout(coreoAndTextLayout)
+        imgAndCoreoLayout.addLayout(imgLayout)
+
         #################### MAIN LAYOUT ####################
-        controlLayout = QVBoxLayout()
-        controlLayout.addLayout(layout1)
-        controlLayout.addWidget(self.connectCB)
-        controlLayout.addLayout(dialsLayout)
-        controlLayout.addLayout(tempLayout)
-        controlLayout.setSpacing(15)
-        mainLayout = QHBoxLayout()
-        mainLayout.addLayout(controlLayout,2)
-        mainLayout.addLayout(imagesLayout,1)
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(self.connectCB)
+        mainLayout.addLayout(dialsLayout)
+        mainLayout.addLayout(imgAndCoreoLayout)
+        mainLayout.setSpacing(15)
+
         w = QWidget()
         w.setLayout(mainLayout)
         self.setCentralWidget(w)
 
     ######################### FUNCTIONS #########################
     # TEST FUNCTION (SEND, RECEIVE AND CONNECT)
-    def getData(self):
-        global b
-        b = [n for n in pybullet_simulation.servoValues]
-        self.message("Current postion saved!")
-    def sendData(self):
-        for i in range(len(b)):
-            self.dialSubLayout[i].itemAt(0).widget().setValue(int(rad2deg(b[i])))
-        pybullet_simulation.servoValues = b
-        self.message("Loaded saved position to simulation!")
+    # ***Funciones obsoletas***
+    # def getData(self):
+    #     global b
+    #     b = [n for n in pb_sim.servoValues]
+    #     self.message("Current postion saved!")
+    # def sendData(self):
+    #     for i in range(len(b)):
+    #         self.dialSubLayout[i].itemAt(0).widget().setValue(int(rad2deg(b[i])))
+    #     pb_sim.servoValues = b
+    #     self.message("Loaded saved position to simulation!")
+    # ***Fin de funciones obsoletas***
     def connectRobonva(self):
         self.uploadCoreoBtn.setEnabled(True)
-        pybullet_simulation.activeConnection = self.connectCB.isChecked()
+        pb_sim.activeConnection = self.connectCB.isChecked()
 
     # DIAL FUNCTIONS
     def updateDial(self,a):
         dialValue =self.dialSubLayout[a].itemAt(0).widget().value()
         valueLabel =self.dialSubLayout[a].itemAt(1).itemAt(1).widget()
         valueLabel.setText(str(dialValue))
-        pybullet_simulation.servoValues[a] = deg2rad(dialValue)
-        simPixMap = QPixmap(pybullet_simulation.simImg)
-        self.lableSim.setPixmap(simPixMap.scaled(640,680))
+        pb_sim.servoValues[a] = deg2rad(dialValue)
+        
+        #self.lableSim.setPixmap(simPixMap.scaled(640,680))
     # choreography FUNCTIONS
     def newCoreo(self):
+        parentPath = os.getcwd()
         self.x = QFileDialog()
         self.filename = self.x.getSaveFileName(filter="CSV Files (*.csv)")
-        if self.filename[0] != "":
+        f = open(self.filename[0], "a")
+        f.close()
+        dirName = os.path.basename(self.filename[0]).split(".")[0]
+        self.dirPath = os.path.join(parentPath,dirName)
+        os.makedirs(self.dirPath)
+        self.newFilePath = self.dirPath+"\\"+os.path.basename(self.filename[0])
+        os.rename(self.filename[0],self.newFilePath)
+        if self.newFilePath != "":
             global currentCoreo
-            currentCoreo = os.path.basename(self.filename[0])
+            currentCoreo = os.path.basename(self.newFilePath)
             self.currentCoreoLabel.setText(
                 "Current choreography: " + currentCoreo)
         else:
@@ -231,7 +254,7 @@ class MainWindow(QMainWindow):
         try:
             with open(currentCoreo,"a") as csvfile:
                 writer = csv.writer(csvfile)
-                writer.writerow(pybullet_simulation.servoValues)
+                writer.writerow(pb_sim.servoValues)
             self.message("Position saved to choreography!")
         except FileNotFoundError:
             self.message("Choreography does not exist or has not been selected")
@@ -339,8 +362,8 @@ class MainWindow(QMainWindow):
                 cs = interpolate.make_interp_spline(x,y, 1)
                 xs = arange(0,t,self.dt)
                 self.coreoPositions = cs(xs)
-            pybullet_simulation.realCoreo = self.coreoPositions
-            pybullet_simulation.uploadCoreo = True
+            pb_sim.realCoreo = self.coreoPositions
+            pb_sim.uploadCoreo = True
         except (AttributeError, FileNotFoundError):
             self.message("Choreography does not exist or has not been selected")
 
@@ -359,6 +382,6 @@ class MainWindow(QMainWindow):
 app = QApplication(sys.argv)
 
 w = MainWindow()
-w.showMaximized()
+w.show()
 
 app.exec_()

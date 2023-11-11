@@ -8,6 +8,8 @@ from numpy import rad2deg, ceil, reshape
 import pybullet_simulation as pb_sim
 import pybullet
 import time
+import cv2
+import os
 def addDial(self, name, lower_limit, upper_limit, initial_value, num):
     # Dial Widget
     self.dial = QDial()
@@ -87,9 +89,36 @@ def repeatCoreo(self,rows,stop_event,smooth,dt):
 def renderImg(self,w,h,ch,vm,pm):
     images = pybullet.getCameraImage(w, h, viewMatrix=vm,
                                         projectionMatrix=pm)
-    rgb = reshape(images[2], (w, h, ch))# * 1. / 255.
+    # rgbGUI = reshape(images[2], (w, h, ch))# * 1. / 255.
+    rgbSave = reshape(images[2],(h,w,ch))
+    imgName = self.currentCoreoDir+"/step"+str(self.currentStepNum)+".png"
+    cv2.imwrite(imgName,cv2.cvtColor(rgbSave,cv2.COLOR_RGBA2BGRA))
+    showImg(self)
+    # bpl = w*ch
+    # simImg = QImage(rgbGUI, w, h, bpl, QImage.Format_RGBA8888)
+    # simPixMap = QPixmap(simImg)
+    # self.stepImg.setPixmap(simPixMap.scaled(480,360))
+
+def showImg(self):
+    imgName = self.currentCoreoDir+"/step"+str(self.currentStepNum)+".png"
+    stepImg = cv2.imread(imgName)
+    stepImg = cv2.cvtColor(stepImg, cv2.COLOR_BGRA2RGBA)
+    w = stepImg.shape[1]
+    h = stepImg.shape[0]
+    ch = stepImg.shape[2]
     bpl = w*ch
-    global simImg
-    simImg = QImage(rgb, w, h, bpl, QImage.Format_RGBA8888)
-    simPixMap = QPixmap(simImg)
-    self.labelStep.setPixmap(simPixMap.scaled(480,360))
+    stepImg = QImage(stepImg, w, h, bpl, QImage.Format_RGBA8888)
+    stepPixMap = QPixmap(stepImg)
+    self.stepImg.setPixmap(stepPixMap.scaled(480,360))
+    self.currentImgNumLabel.setText("{} of {}".format(str(self.currentStepNum),str(self.totalSteps)))
+    enableImgBtns(self)
+
+def enableImgBtns(self):
+    if self.currentStepNum==1:
+        self.prevImgBtn.setEnabled(False)
+    else:
+        self.prevImgBtn.setEnabled(True)
+    if self.currentStepNum==self.totalSteps:
+        self.nextImgBtn.setEnabled(False)
+    else:
+        self.nextImgBtn.setEnabled(True)

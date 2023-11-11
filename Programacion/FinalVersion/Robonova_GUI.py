@@ -25,8 +25,8 @@ time.sleep(2)
 
 
 
-global currentCoreo
-currentCoreo = ""
+global currentCoreoName
+currentCoreoName = ""
 
 class MainWindow(QMainWindow):
 
@@ -75,10 +75,9 @@ class MainWindow(QMainWindow):
         # Desing
         self.newCoreoBtn = QPushButton("New choreography")
         self.loadCoreoBtn = QPushButton("Load choreography")
-        self.addCoreoBtn = QPushButton(
-            "Add current position\nto choreography")
-        self.removeCoreoBtn = QPushButton(
-            "Remove last saved\nposition from choreography")
+        self.replacePositionBtn = QPushButton("Replace current position")
+        self.removePositionBtn = QPushButton("Remove current position")
+        self.addNextPositionBtn = QPushButton("Add as next position")
         self.clearCoreoBtn = QPushButton("Clear choreography")
         self.deleteCoreoBtn = QPushButton("Delete choreography File")
         self.playCoreoBtn = QPushButton("Play choreography")
@@ -90,12 +89,13 @@ class MainWindow(QMainWindow):
         self.dtbutton = QPushButton("Set")
         self.repeatCoreoCB = QCheckBox("Repeat choreography")
         self.currentCoreoLabel = QLabel(
-            "Current choreography: "+ currentCoreo)
+            "Current choreography: "+ currentCoreoName)
         # Customize
         self.newCoreoBtn.setFont(btnFont)
         self.loadCoreoBtn.setFont(btnFont)
-        self.addCoreoBtn.setFont(btnFont)
-        self.removeCoreoBtn.setFont(btnFont)
+        self.replacePositionBtn.setFont(btnFont)
+        self.removePositionBtn.setFont(btnFont)
+        self.addNextPositionBtn.setFont(btnFont)
         self.clearCoreoBtn.setFont(btnFont)
         self.deleteCoreoBtn.setFont(btnFont)
         self.playCoreoBtn.setFont(btnFont)
@@ -107,8 +107,9 @@ class MainWindow(QMainWindow):
         # Connect
         self.newCoreoBtn.pressed.connect(self.newCoreo)
         self.loadCoreoBtn.pressed.connect(self.loadCoreo)
-        self.addCoreoBtn.pressed.connect(self.addCoreo)
-        self.removeCoreoBtn.pressed.connect(self.removeCoreo)
+        self.replacePositionBtn.pressed.connect(self.replacePosition)
+        self.removePositionBtn.pressed.connect(self.removePosition)
+        self.addNextPositionBtn.pressed.connect(self.addPosition)
         self.clearCoreoBtn.pressed.connect(self.clearCoreo)
         self.deleteCoreoBtn.pressed.connect(self.deleteCoreo)
         self.playCoreoBtn.pressed.connect(
@@ -121,10 +122,11 @@ class MainWindow(QMainWindow):
         coreoLayout1 = QGridLayout()
         coreoLayout1.addWidget(self.newCoreoBtn, 0, 0)
         coreoLayout1.addWidget(self.loadCoreoBtn, 0, 1)
-        coreoLayout1.addWidget(self.addCoreoBtn, 1, 0)
-        coreoLayout1.addWidget(self.removeCoreoBtn, 1, 1)
-        coreoLayout1.addWidget(self.clearCoreoBtn, 2, 0)
-        coreoLayout1.addWidget(self.deleteCoreoBtn, 2, 1)
+        coreoLayout1.addWidget(self.addNextPositionBtn, 1, 0, 1, 2)
+        coreoLayout1.addWidget(self.replacePositionBtn, 2, 0)
+        coreoLayout1.addWidget(self.removePositionBtn, 2, 1)
+        coreoLayout1.addWidget(self.clearCoreoBtn, 3, 0)
+        coreoLayout1.addWidget(self.deleteCoreoBtn, 3, 1)
         coreoLayout1.setSpacing(15)
         coreoLayout2 = QHBoxLayout()
         coreoLayout2.addWidget(self.playCoreoBtn)
@@ -154,30 +156,45 @@ class MainWindow(QMainWindow):
         coreoAndTextLayout.addWidget(self.text)
 
         #################### IMAGES ####################
+        #Widgets
         imgTitle = QLabel("Current step preview:")
-        prevImgBtn = QPushButton("<<")
-        currentImg = QLabel("x of x")
-
-        nextImgBtn = QPushButton(">>")
-        
+        self.stepImg = QLabel()
+        self.prevImgBtn = QPushButton("<<")
+        self.currentImgNumLabel = QLabel("x of x")
+        self.nextImgBtn = QPushButton(">>")
         self.imgW = 480
         self.imgH = 360
+        # Customize
+        try:
+            if self.currentStepNum==1:
+                self.prevImgBtn.setEnabled(False)
+            if self.currentStepNum==self.totalSteps:
+                self.nextImgBtn.setEnabled(False)
+        except(AttributeError):
+            self.stepImg.setText("No Preview")
+            self.stepImg.setFont(btnFont)
+            self.prevImgBtn.setEnabled(False)
+            self.nextImgBtn.setEnabled(False)
+        # Connect
+        self.prevImgBtn.pressed.connect(self.prevImg)
+        self.nextImgBtn.pressed.connect(self.nextImg)
         # Step images
-        stepImg = cv2.imread("Programacion\FinalVersion\RobonovaWalking.png")
-        stepImg = cv2.cvtColor(stepImg, cv2.COLOR_BGR2RGB)
-        h, w, ch = stepImg.shape
-        bpl = w*ch
-        qImg = QImage(stepImg.data, w, h, bpl, QImage.Format_RGB888)
-        stepImg = QLabel()
-        stepImg.setPixmap(QPixmap(qImg).scaled(self.imgW,self.imgH))
+        # stepImg = cv2.imread("Programacion\FinalVersion\RobonovaWalking.png")
+        # stepImg = cv2.cvtColor(stepImg, cv2.COLOR_BGR2RGB)
+        # h, w, ch = stepImg.shape
+        # bpl = w*ch
+        # qImg = QImage(stepImg.data, w, h, bpl, QImage.Format_RGB888)
+        # self.stepImg = QLabel()
+        # self.stepImg.setPixmap(QPixmap(qImg).scaled(self.imgW,self.imgH))
         
+        # Layout
         imgBtnLayout = QHBoxLayout()
-        imgBtnLayout.addWidget(prevImgBtn,2)
-        imgBtnLayout.addWidget(currentImg,1)
-        imgBtnLayout.addWidget(nextImgBtn,2)
+        imgBtnLayout.addWidget(self.prevImgBtn,2)
+        imgBtnLayout.addWidget(self.currentImgNumLabel,1)
+        imgBtnLayout.addWidget(self.nextImgBtn,2)
         imgLayout = QVBoxLayout()
         imgLayout.addWidget(imgTitle)
-        imgLayout.addWidget(stepImg)
+        imgLayout.addWidget(self.stepImg,alignment=Qt.AlignCenter)
         imgLayout.addLayout(imgBtnLayout)
 
         imgAndCoreoLayout = QHBoxLayout()
@@ -218,8 +235,7 @@ class MainWindow(QMainWindow):
         valueLabel =self.dialSubLayout[a].itemAt(1).itemAt(1).widget()
         valueLabel.setText(str(dialValue))
         pb_sim.servoValues[a] = deg2rad(dialValue)
-        
-        #self.lableSim.setPixmap(simPixMap.scaled(640,680))
+
     # choreography FUNCTIONS
     def newCoreo(self):
         parentPath = os.getcwd()
@@ -228,15 +244,17 @@ class MainWindow(QMainWindow):
         f = open(self.filename[0], "a")
         f.close()
         dirName = os.path.basename(self.filename[0]).split(".")[0]
-        self.dirPath = os.path.join(parentPath,dirName)
-        os.makedirs(self.dirPath)
-        self.newFilePath = self.dirPath+"\\"+os.path.basename(self.filename[0])
+        self.currentCoreoDir = os.path.join(parentPath,dirName)
+        os.makedirs(self.currentCoreoDir)
+        self.newFilePath = self.currentCoreoDir+"/"+os.path.basename(self.filename[0])
+        self.newFilePath = self.newFilePath.replace("\\","/")
         os.rename(self.filename[0],self.newFilePath)
         if self.newFilePath != "":
-            global currentCoreo
-            currentCoreo = os.path.basename(self.newFilePath)
+            self.currentCoreoName = os.path.basename(self.newFilePath)
+            self.currentCoreoFile = self.newFilePath
+            self.totalSteps = 0
             self.currentCoreoLabel.setText(
-                "Current choreography: " + currentCoreo)
+                "Current choreography: " + currentCoreoName)
         else:
             pass
 
@@ -244,46 +262,79 @@ class MainWindow(QMainWindow):
         self.x = QFileDialog()
         self.filename = self.x.getOpenFileName(filter="CSV Files (*.csv)")
         if self.filename[0] != "":
-            global currentCoreo
-            currentCoreo = os.path.basename(self.filename[0])
-            self.currentCoreoLabel.setText(
-                "Current choreography: " + currentCoreo)
-        else:
-            pass
-    def addCoreo(self):
-        try:
-            with open(currentCoreo,"a") as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow(pb_sim.servoValues)
-            self.message("Position saved to choreography!")
-        except FileNotFoundError:
-            self.message("Choreography does not exist or has not been selected")
-    def removeCoreo(self):
-        try:
-            with open(currentCoreo, "r+") as csvfile:
+            self.currentCoreoFile = self.filename[0]
+            with open(self.currentCoreoFile,"r+") as csvfile:
                 lines = csvfile.readlines()
                 updatedlines = []
                 for line in lines:
                     if line == "\n":
                         continue
                     updatedlines.append(line)
-                updatedlines.pop()
+            self.totalSteps = len(updatedlines)
+            self.currentStepNum = self.totalSteps
+            self.currentCoreoDir = self.currentCoreoFile.replace("\\","/").rsplit("/",1)[0]
+            try:
+                GUI_Functions.showImg(self)
+            except:
+                self.stepImg.setText("No preview")    
+            self.currentCoreoName = os.path.basename(self.filename[0])
+            self.currentCoreoLabel.setText(
+                "Current choreography: " + currentCoreoName)
+        else:
+            pass
+    def addPosition(self):
+        try:
+            with open(self.currentCoreoFile,"a") as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(pb_sim.servoValues)
+            with open(self.currentCoreoFile,"r+") as csvfile:
+                lines = csvfile.readlines()
+                updatedlines = []
+                for line in lines:
+                    if line == "\n":
+                        continue
+                    updatedlines.append(line)
+                self.totalSteps = len(updatedlines)
+            self.currentStepNum += 1
+            for i in reversed(range(self.currentStepNum,self.totalSteps)):
+                oldName = self.currentCoreoDir+"/step"+str(i)+".png"
+                newName = self.currentCoreoDir+"/step"+str(i+1)+".png"
+                os.rename(oldName,newName)
+            GUI_Functions.renderImg(self, self.imgW, self.imgH,4,
+                                    pb_sim.vm, pb_sim.pm)
+
+            self.message("Position saved to choreography!")
+        except (FileNotFoundError, AttributeError) as err:
+            print(err)
+            self.message("Choreography does not exist or has not been selected")
+    def removePosition(self):
+        try:
+            with open(self.currentCoreoFile, "r+") as csvfile:
+                lines = csvfile.readlines()
+                updatedlines = []
+                for line in lines:
+                    if line == "\n":
+                        continue
+                    updatedlines.append(line)
+                updatedlines.pop(self.currentStepNum-1)
                 lines = ""
                 csvfile.truncate(0)
                 csvfile.writelines(lines)
-            with open(currentCoreo, "w+") as csvfile:
+            with open(self.currentCoreoFile, "w+") as csvfile:
                 csvfile.writelines(updatedlines)
             self.message("Position removed from coreograhy!")
         except (FileNotFoundError, IndexError) as err:
             if isinstance(err,FileNotFoundError):
                 self.message("Choreography does not exist or has not been selected")
-            elif isinstance(err,IndexError):
+            elif isinstance(err,IndexError) or isinstance(err,PermissionError):
                 self.message("Choreography is already empty!")
             else:
                 self.message("Unknown Error")
+    def replacePosition(self):
+        pass
     def clearCoreo(self):
         try:
-            with open(currentCoreo,"r+") as csvfile:
+            with open(self.currentCoreoFile,"r+") as csvfile:
                 lines = ""
                 csvfile.truncate(0)
                 csvfile.writelines(lines)
@@ -292,7 +343,7 @@ class MainWindow(QMainWindow):
             self.message("Choreography does not exist or has not been selected")
     def deleteCoreo(self):
         try:
-            os.remove(currentCoreo)
+            os.rmdir(os.path.dirname(self.currentCoreoFile))
             self.message("Choreography has been deleted!")
             self.currentCoreoLabel.setText("Current choreography: ")
         except FileNotFoundError:
@@ -303,7 +354,7 @@ class MainWindow(QMainWindow):
     def playCoreo(self, **buttonPressed):
         #self.dt = 0.05
         try:
-            with open(currentCoreo, "r+") as csvfile:
+            with open(currentCoreoName, "r+") as csvfile:
                 reader = csv.reader(csvfile)
                 self.coreoPositions = []
                 for line in reader:
@@ -347,7 +398,7 @@ class MainWindow(QMainWindow):
 
     def uploadCoreo(self):
         try:
-            with open(currentCoreo, "r+") as csvfile:
+            with open(currentCoreoName, "r+") as csvfile:
                 reader = csv.reader(csvfile)
                 self.coreoPositions = []
                 for line in reader:
@@ -375,6 +426,13 @@ class MainWindow(QMainWindow):
             self.message("dt not specified or invalid, setting default value dt = 0.05")
             self.dt = 0.05
 
+    # Image Functions
+    def nextImg(self):
+        self.currentStepNum += 1
+        GUI_Functions.showImg(self)
+    def prevImg(self):
+        self.currentStepNum -= 1
+        GUI_Functions.showImg(self)
     # MISC FUNCTIONS
     def message(self, s):
         self.text.appendPlainText(s)

@@ -86,7 +86,12 @@ def repeatCoreo(self,rows,stop_event,smooth,dt):
                 dialValue =self.dials[a].setValue(int(rad2deg(coreoPosition[a])))
             break
 
-def renderImg(self,w,h,ch,vm,pm):
+def renderImg(self):
+    w = 480
+    h = 360
+    ch = 4
+    vm = pb_sim.vm
+    pm = pb_sim.pm
     images = pybullet.getCameraImage(w, h, viewMatrix=vm,
                                         projectionMatrix=pm)
     # rgbGUI = reshape(images[2], (w, h, ch))# * 1. / 255.

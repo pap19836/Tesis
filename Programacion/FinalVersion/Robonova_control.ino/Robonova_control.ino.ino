@@ -165,14 +165,14 @@ void loop() {
         values += c;
       }
       if(values != NULL){
-        Serial.println(values);
+        // Serial.println(values);
         deserializeJson(doc, values);
         //exchangeJSON(values);
         if(!doc["playCoreo"]){
           if (!doc["uploadCoreo"]){
-            Serial.printf("RW=%.3f RH1=%.3f RH2=%.3f RK=%.3f RA1=%.3f RA2=%.3f LW=%.3f LH1=%.3f LH2=%.3f LK=%.3f LA1=%.3f LA2=%.3f\n",
-                        float((doc["RightWaist"])), float((doc["RightHip1"])), float((doc["RightHip2"])), float((doc["RightKnee"])), float((doc["RightAnkle1"])), float((doc["RightAnkle2"])),
-                        float((doc["LeftWaist"])), float((doc["LeftHip1"])), float((doc["LeftHip2"])), float((doc["LeftKnee"])), float((doc["LeftAnkle1"])), float((doc["LeftAnkle2"])));
+            Serial.printf("RS1=%.3f RS2=%.3f RW=%.3f RH1=%.3f RH2=%.3f RK=%.3f RA1=%.3f RA2=%.3f LS1=%.3f LS2=%.3f LW=%.3f LH1=%.3f LH2=%.3f LK=%.3f LA1=%.3f LA2=%.3f\n",
+                        float((doc["RightShoulder1"])), float((doc["RightShoulder2"])), float((doc["RightWaist"])), float((doc["RightHip1"])), float((doc["RightHip2"])), float((doc["RightKnee"])), float((doc["RightAnkle1"])), float((doc["RightAnkle2"])),
+                        float((doc["LeftShoulder1"])), float((doc["LeftShoulder2"])), float((doc["LeftWaist"])), float((doc["LeftHip1"])), float((doc["LeftHip2"])), float((doc["LeftKnee"])), float((doc["LeftAnkle1"])), float((doc["LeftAnkle2"])));
             servoValues[11] = 180 - float((doc["RightAnkle2"]));
             servoValues[9] = 180 - float((doc["RightAnkle1"]));
             servoValues[7] = float((doc["RightKnee"]));
@@ -240,7 +240,12 @@ void loop() {
           }
           Serial.println("Playing Coreo...");
           Serial.println(float(LeftShoulder2[i]));
-          delay(500);
+          if(coreoLen<20){
+            delay(100)
+          }
+          else{
+            delay(10);
+          }
         }
         doc["playCoreo"] = false;
       }

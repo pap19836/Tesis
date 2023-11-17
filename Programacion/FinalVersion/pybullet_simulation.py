@@ -98,7 +98,7 @@ def pb():
         for i in range(numJoints):
             x = servoValues[i]
             servo2.append(x)
-        if (old_servo_values != servo2) & (activeConnection == True) & (playRealCoreo!= True):
+        if ((old_servo_values != servo2) & (activeConnection == True)) & (playRealCoreo!= True):
             n = 0
             for key in joint_dict.keys():
                 joint_dict[key] = rad2deg(servoValues[n])+90

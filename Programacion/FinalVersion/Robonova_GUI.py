@@ -419,6 +419,10 @@ class MainWindow(QMainWindow):
                 rmtree(self.currentCoreoDir)
                 self.message("Choreography has been deleted!")
                 self.currentCoreoLabel.setText("Current choreography: ")
+                self.totalSteps = 0
+                self.currentStepNum = 0
+                self.stepImg.setText("No Preview")
+                self.currentImgNumLabel.setText("{} of {}".format(str(self.currentStepNum),str(self.totalSteps)))
             except (FileNotFoundError, AttributeError):
                 self.message("Choreography does not exist or has not been selected")
         
@@ -457,6 +461,9 @@ class MainWindow(QMainWindow):
                     self.t2stop.set()
                     self.t2.start()
                     self.message("Choreography done!")
+                if self.playRealCoreoFlag:
+                    pb_sim.playRealCoreo = True
+
 
             if (not(self.repeatCoreoCB.isChecked()) 
                 and self.repeating) == True:
@@ -473,11 +480,11 @@ class MainWindow(QMainWindow):
             #pass
             # self.simCoreoBtn.setChecked(False)
             # self.bothCoreoBtn.setChecked(False)
-            pb_sim.playRealCoreo = False
+            self.playRealCoreoFlag = False
         else:
             #pass
             if pb_sim.coreoExists:
-                pb_sim.playRealCoreo = True
+                self.playRealCoreoFlag = True
             else:
                 self.bothCoreoBtn.setChecked(True)
                 self.simCoreoBtn.setChecked(False)

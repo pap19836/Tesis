@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton,
                              QVBoxLayout, QHBoxLayout, QGridLayout,
                              QMessageBox, QButtonGroup, QRadioButton)
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 import cv2
 import sys
 import csv
@@ -13,14 +13,14 @@ import threading
 import pybullet_simulation as pb_sim
 import GUI_Functions
 import time
-from numpy import deg2rad,rad2deg, arange
+from numpy import deg2rad,rad2deg, arange, fromstring, round
 import os as os
 from functools import partial
 from scipy import interpolate
 from shutil import rmtree
-pb_sim.servoValues = deg2rad([0,0,-45,0,0,
+pb_sim.servoValues = round(deg2rad([0,0,-45,0,0,
                                            -60,0,0,0,0,
-                                           45,0,0,-60,0,0])
+                                           45,0,0,-60,0,0]),3)
 t1 = threading.Thread(target=pb_sim.pb,args=())
 t1.start()
 time.sleep(2)
@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        #self.showMaximized()
+        self.setWindowTitle("Programa de Control - Robonova-1")
         self.dt = 0.05
         ########## SENDING AND RECEIVING POSITION BUTTONS ##########
         # Design
@@ -37,10 +37,13 @@ class MainWindow(QMainWindow):
         # self.GetDataBtn = QPushButton("Get Data")
         # self.SendDataBtn = QPushButton("Send Data")
         self.connectCB = QCheckBox("Connect to Robonova")
+        self.checkConnectionTimer = QTimer()
         # Connect
         # self.GetDataBtn.pressed.connect(self.getData)
         # self.SendDataBtn.pressed.connect(self.sendData)
         self.connectCB.stateChanged.connect(self.connectRobonva)
+        self.checkConnectionTimer.timeout.connect(self.checkConnection)
+        
         # Customize
         # btnFont = self.GetDataBtn.font()
         # btnFont.setPointSize(20)
@@ -82,6 +85,8 @@ class MainWindow(QMainWindow):
 
         self.whereBtnGroupWidget =QWidget()
         self.simCoreoBtn = QRadioButton("Only on simulation")
+        self.playRealCoreoFlag = False
+        self.simCoreoBtn.setChecked(True)
         self.bothCoreoBtn = QRadioButton("Both Simulation and Robot")
         self.smoothTrajectoryCB = QCheckBox("Smooth trajectory")
         self.dtlabel = QLabel("dt")
@@ -233,38 +238,53 @@ class MainWindow(QMainWindow):
     #     self.message("Loaded saved position to simulation!")
     # ***Fin de funciones obsoletas***
     def connectRobonva(self):
-        self.uploadCoreoBtn.setEnabled(True)
-        self.bothCoreoBtn.setEnabled(True)
+        if self.connectCB.isChecked():
+            self.uploadCoreoBtn.setEnabled(True)
+            self.bothCoreoBtn.setEnabled(True)
+        else:
+            self.uploadCoreoBtn.setEnabled(False)
+            self.bothCoreoBtn.setEnabled(False)
         pb_sim.activeConnection = self.connectCB.isChecked()
-
+        self.checkConnectionTimer.start(1000)
+    def checkConnection(self):
+        if(self.connectCB.isChecked()) & (pb_sim.connected !=True):
+            self.connectCB.setChecked(False)
+            self.message("Robonova disconnected, try reconnecting")
+        self.checkConnectionTimer.start(1000)
     # DIAL FUNCTIONS
     def updateDial(self,a):
         dialValue =self.dialSubLayout[a].itemAt(0).widget().value()
         valueLabel =self.dialSubLayout[a].itemAt(1).itemAt(1).widget()
         valueLabel.setText(str(dialValue))
-        pb_sim.servoValues[a] = deg2rad(dialValue)
+        pb_sim.servoValues[a] = round(deg2rad(dialValue),3)
 
     # choreography FUNCTIONS
     def newCoreo(self):
         parentPath = os.getcwd()
         self.x = QFileDialog()
         self.filename = self.x.getSaveFileName(filter="CSV Files (*.csv)")
-        f = open(self.filename[0], "a")
-        f.close()
-        dirName = os.path.basename(self.filename[0]).split(".")[0]
-        self.currentCoreoDir = os.path.join(parentPath,dirName)
-        os.makedirs(self.currentCoreoDir)
-        self.newFilePath = self.currentCoreoDir+"/"+os.path.basename(self.filename[0])
-        self.newFilePath = self.newFilePath.replace("\\","/")
-        os.rename(self.filename[0],self.newFilePath)
-        if self.newFilePath != "":
-            self.currentCoreoName = os.path.basename(self.newFilePath)
-            self.currentCoreoFile = self.newFilePath
-            self.totalSteps = 0
-            self.currentStepNum = 0
-            self.currentCoreoLabel.setText(
-                "Current choreography: " + self.currentCoreoName)
-        else:
+        try:
+            f = open(self.filename[0], "a")
+            f.close()
+            dirName = os.path.basename(self.filename[0]).split(".")[0]
+            self.currentCoreoDir = os.path.join(parentPath,dirName)
+            os.makedirs(self.currentCoreoDir)
+            self.newFilePath = self.currentCoreoDir+"/"+os.path.basename(self.filename[0])
+            self.newFilePath = self.newFilePath.replace("\\","/")
+            os.rename(self.filename[0],self.newFilePath)
+            if self.newFilePath != "":
+                self.currentCoreoName = os.path.basename(self.newFilePath)
+                self.currentCoreoFile = self.newFilePath
+                self.totalSteps = 0
+                self.currentStepNum = 0
+                self.stepImg.setText("No Preview")
+                GUI_Functions.enableImgBtns(self)
+                self.currentImgNumLabel.setText("{} of {}".format(str(self.currentStepNum),str(self.totalSteps)))
+                self.currentCoreoLabel.setText(
+                    "Current choreography: " + self.currentCoreoName)
+            else:
+                pass
+        except:
             pass
 
     def loadCoreo(self):
@@ -274,18 +294,23 @@ class MainWindow(QMainWindow):
             self.currentCoreoFile = self.filename[0]
             with open(self.currentCoreoFile,"r+") as csvfile:
                 lines = csvfile.readlines()
+                self.coreoPositions = []
                 updatedlines = []
                 for line in lines:
                     if line == "\n":
                         continue
                     updatedlines.append(line)
+                self.coreoPositions = updatedlines
+                for i in range(len(self.coreoPositions)):
+                    self.coreoPositions[i] = fromstring(self.coreoPositions[i],sep=",")
             self.totalSteps = len(updatedlines)
             self.currentStepNum = self.totalSteps
             self.currentCoreoDir = self.currentCoreoFile.replace("\\","/").rsplit("/",1)[0]
             try:
                 GUI_Functions.showImg(self)
             except:
-                self.stepImg.setText("No Preview")    
+                self.stepImg.setText("No Preview")  
+                self.currentImgNumLabel.setText("{} of {}".format(str(self.currentStepNum),str(self.totalSteps)))  
             self.currentCoreoName = os.path.basename(self.filename[0])
             self.currentCoreoLabel.setText(
                 "Current choreography: " + self.currentCoreoName)
@@ -301,7 +326,7 @@ class MainWindow(QMainWindow):
                         continue
                     line = list(line.split('\n')[0].split(','))
                     updatedlines.append(line)
-                newValues = pb_sim.servoValues.tolist()
+                newValues = pb_sim.servoValues
                 newValues = [str(x) for x in newValues]
                 updatedlines.insert(self.currentStepNum,newValues)
                 lines = ""
@@ -312,6 +337,13 @@ class MainWindow(QMainWindow):
                 for line in updatedlines:
                     writer.writerow(line)
                 self.totalSteps = len(updatedlines)
+            with open(self.currentCoreoFile, "r+") as csvfile:
+                reader = csv.reader(csvfile)
+                self.coreoPositions = []
+                for line in reader:
+                    if not line:
+                        continue
+                    self.coreoPositions.append(line)
             self.currentStepNum += 1
             for i in reversed(range(self.currentStepNum,self.totalSteps)):
                 oldName = self.currentCoreoDir+"/step"+str(i)+".png"
@@ -339,6 +371,13 @@ class MainWindow(QMainWindow):
             with open(self.currentCoreoFile, "w+") as csvfile:
                 csvfile.writelines(updatedlines)
                 self.totalSteps = len(updatedlines)
+            with open(self.currentCoreoFile, "r+") as csvfile:
+                reader = csv.reader(csvfile)
+                self.coreoPositions = []
+                for line in reader:
+                    if not line:
+                        continue
+                    self.coreoPositions.append(line)
             os.remove(self.currentCoreoDir+"/step"+str(self.currentStepNum)+".png")
             if self.currentStepNum < self.totalSteps:
                 for i in range(self.currentStepNum,self.totalSteps+1):
@@ -370,7 +409,7 @@ class MainWindow(QMainWindow):
                         continue
                     line = list(line.split('\n')[0].split(','))
                     updatedlines.append(line)
-                newValues = pb_sim.servoValues.tolist()
+                newValues = pb_sim.servoValues
                 newValues = [str(x) for x in newValues]
                 updatedlines[self.currentStepNum-1] = newValues
                 lines = ""
@@ -381,10 +420,17 @@ class MainWindow(QMainWindow):
                 for line in updatedlines:
                     writer.writerow(line)
                 self.totalSteps = len(updatedlines)
+            with open(self.currentCoreoFile, "r+") as csvfile:
+                reader = csv.reader(csvfile)
+                self.coreoPositions = []
+                for line in reader:
+                    if not line:
+                        continue
+                    self.coreoPositions.append(line)
             GUI_Functions.renderImg(self)
             self.message("Position has been replaced!")
-        except (FileNotFoundError, IndexError) as err:
-            if isinstance(err,FileNotFoundError):
+        except (FileNotFoundError, IndexError, PermissionError, AttributeError) as err:
+            if isinstance(err,FileNotFoundError)or isinstance(err,AttributeError):
                 self.message("Choreography does not exist or has not been selected")
             elif isinstance(err,IndexError) or isinstance(err,PermissionError):
                 self.message("Choreography is already empty!")
@@ -450,10 +496,12 @@ class MainWindow(QMainWindow):
                     args=(self,self.coreoPositions,self.t2stop,self.smoothTrajectoryCB.isChecked(),self.dt))
 
             if buttonPressed["buttonPressed"] == True:
+                pb_sim.controlFlag = False
                 if (self.repeatCoreoCB.isChecked() 
                     and not(self.t2.is_alive())) == True:
                     self.message("Playing choreography...")
                     self.repeating = True
+                    pb_sim.repeatCB = True
                     self.t2stop.clear()
                     self.t2.start()
                 else:
@@ -468,6 +516,7 @@ class MainWindow(QMainWindow):
             if (not(self.repeatCoreoCB.isChecked()) 
                 and self.repeating) == True:
                 self.repeating = False
+                pb_sim.repeatCB = False
                 self.t2stop.set()
                 self.message("Choreography done!")
         except (FileNotFoundError,IndexError) as err:
@@ -478,18 +527,16 @@ class MainWindow(QMainWindow):
     def whereToPlay(self):
         if (self.simCoreoBtn.isChecked()) and not(self.bothCoreoBtn.isChecked()):
             #pass
-            # self.simCoreoBtn.setChecked(False)
-            # self.bothCoreoBtn.setChecked(False)
             self.playRealCoreoFlag = False
         else:
             #pass
             if pb_sim.coreoExists:
                 self.playRealCoreoFlag = True
             else:
-                self.bothCoreoBtn.setChecked(True)
-                self.simCoreoBtn.setChecked(False)
+                self.simCoreoBtn.setChecked(True)
                 self.message("No choreography in robot. Try Upload choreography")
     def uploadCoreo(self):
+    
         try:
             with open(self.currentCoreoFile, "r+") as csvfile:
                 reader = csv.reader(csvfile)
@@ -498,6 +545,7 @@ class MainWindow(QMainWindow):
                     if not line:
                         continue
                     self.coreoPositions.append(line)
+                l = len(self.coreoPositions)
             
             if self.smoothTrajectoryCB.isChecked():
                 t = len(self.coreoPositions)-1
@@ -506,8 +554,15 @@ class MainWindow(QMainWindow):
                 cs = interpolate.make_interp_spline(x,y, 1)
                 xs = arange(0,t,self.dt)
                 self.coreoPositions = cs(xs)
-            pb_sim.realCoreo = self.coreoPositions
-            pb_sim.uploadCoreo = True
+                l = len(self.coreoPositions)
+            
+            if (l > 200):
+                reply = QMessageBox.critical(self, 'Too Long', 
+                    'The choreography is too long! Try increasing "dt" or decresing the amount of steps in the choreography',
+                    QMessageBox.Ok)
+            else:
+                pb_sim.realCoreo = self.coreoPositions
+                pb_sim.uploadCoreo = True
         except (AttributeError, FileNotFoundError):
             self.message("Choreography does not exist or has not been selected")
 
@@ -523,9 +578,15 @@ class MainWindow(QMainWindow):
     def nextImg(self):
         self.currentStepNum += 1
         GUI_Functions.showImg(self)
+        currentPosition = [float(x) for x in self.coreoPositions[self.currentStepNum-1]]
+        for a in range(len(self.dials)):
+                dialValue =self.dials[a].setValue(int(rad2deg(currentPosition[a])))
     def prevImg(self):
         self.currentStepNum -= 1
         GUI_Functions.showImg(self)
+        currentPosition = [float(x) for x in self.coreoPositions[self.currentStepNum-1]]
+        for a in range(len(self.dials)):
+                dialValue =self.dials[a].setValue(int(rad2deg(currentPosition[a])))
     # MISC FUNCTIONS
     def message(self, s):
         self.text.appendPlainText(s)

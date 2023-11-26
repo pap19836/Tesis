@@ -74,9 +74,14 @@ def dialsLayout(LayoutList):
 
 def repeatCoreo(self,rows,stop_event,smooth,dt):
     while True:
+        pb_sim.controlFlag = False
         for i in range(len(rows)):
             coreoPosition = [float(x) for x in rows[i] ]
             pb_sim.servoValues = coreoPosition
+            for i in range(pb_sim.numJoints):
+                x = pb_sim.servoValues[i]
+                pb_sim.servo2.append(x)
+            pb_sim.old_servo_values = pb_sim.servo2
             if smooth:
                 time.sleep(dt/10)
             else:
@@ -84,6 +89,12 @@ def repeatCoreo(self,rows,stop_event,smooth,dt):
         if stop_event.is_set():
             for a in range(len(coreoPosition)):
                 dialValue =self.dials[a].setValue(int(rad2deg(coreoPosition[a])))
+            for i in range(pb_sim.numJoints):
+                x = pb_sim.servoValues[i]
+                pb_sim.servo2.append(x)
+            pb_sim.old_servo_values = pb_sim.servo2
+            pb_sim.controlFlag = True
+            #self.currentStepNum = len(rows)
             break
 
 def renderImg(self):
@@ -94,15 +105,10 @@ def renderImg(self):
     pm = pb_sim.pm
     images = pybullet.getCameraImage(w, h, viewMatrix=vm,
                                         projectionMatrix=pm)
-    # rgbGUI = reshape(images[2], (w, h, ch))# * 1. / 255.
     rgbSave = reshape(images[2],(h,w,ch))
     imgName = self.currentCoreoDir+"/step"+str(self.currentStepNum)+".png"
     cv2.imwrite(imgName,cv2.cvtColor(rgbSave,cv2.COLOR_RGBA2BGRA))
     showImg(self)
-    # bpl = w*ch
-    # simImg = QImage(rgbGUI, w, h, bpl, QImage.Format_RGBA8888)
-    # simPixMap = QPixmap(simImg)
-    # self.stepImg.setPixmap(simPixMap.scaled(480,360))
 
 def showImg(self):
     imgName = self.currentCoreoDir+"/step"+str(self.currentStepNum)+".png"
@@ -119,11 +125,11 @@ def showImg(self):
     enableImgBtns(self)
 
 def enableImgBtns(self):
-    if self.currentStepNum==1:
+    if (self.currentStepNum==1) or (self.currentStepNum==0):
         self.prevImgBtn.setEnabled(False)
     else:
         self.prevImgBtn.setEnabled(True)
-    if self.currentStepNum==self.totalSteps:
+    if (self.currentStepNum==self.totalSteps) or (self.totalSteps==0):
         self.nextImgBtn.setEnabled(False)
     else:
         self.nextImgBtn.setEnabled(True)

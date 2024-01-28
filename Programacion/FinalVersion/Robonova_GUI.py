@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton,
                              QMessageBox, QButtonGroup, QRadioButton)
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import Qt, QTimer
-import cv2
 import sys
 import csv
 import threading
@@ -261,6 +260,7 @@ class MainWindow(QMainWindow):
     # choreography FUNCTIONS
     def newCoreo(self):
         parentPath = os.getcwd()
+        parentPath = parentPath+'/Rutinas'
         self.x = QFileDialog()
         self.filename = self.x.getSaveFileName(filter="CSV Files (*.csv)")
         try:

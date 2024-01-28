@@ -6,7 +6,6 @@ from numpy import rad2deg
 import socket
 import json
 import numpy as np
-import threading
 from time import time
 def pb():
     global servoValues
@@ -60,10 +59,10 @@ def pb():
                                         cameraTargetPosition=[0,0,0.25])
     # Set plane in simulation
     pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
-    plane = pybullet.loadURDF("C://Users//stefa//OneDrive - Universidad del Valle de Guatemala//UVG//Tesis//Programacion//tesis_env//Lib//site-packages//pybullet_data//plane.urdf")
+    plane = pybullet.loadURDF("plane/plane.urdf")
 
     # Load robot URDF
-    robot = pybullet.loadURDF("C://Users//stefa//OneDrive - Universidad del Valle de Guatemala//UVG//Tesis//Programacion//FinalVersion//robonova//robot.urdf",
+    robot = pybullet.loadURDF("robonova//robot.urdf",
                               [0,0,0.32],useFixedBase=1)
 
     # Get Robot info and Initialize servos

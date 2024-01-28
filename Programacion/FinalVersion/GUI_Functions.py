@@ -9,7 +9,6 @@ import pybullet_simulation as pb_sim
 import pybullet
 import time
 import cv2
-import os
 def addDial(self, name, lower_limit, upper_limit, initial_value, num):
     # Dial Widget
     self.dial = QDial()
